@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict   
-from functions import create_automaton, read_automaton, recognize_string, afd_to_afn, afn_to_afd, is_afd, list_automata
+from functions import create_automaton, read_automaton, recognize_string, afn_to_afd, is_afd, list_automata, converter_afn_para_afd_completo, minimizar_afd
 from automaton import Automaton, Transition
 
 app = FastAPI()
@@ -23,15 +23,11 @@ def recognize_string_route(automaton_id: int, input_string: str):
     automaton = read_automaton(automaton_id)
     return {"recognized": recognize_string(automaton, input_string)}
 
-@app.post("/automaton/{automaton_id}/to_afn", response_model=Automaton)
-def convert_to_afn(automaton_id: int):
-    afd = read_automaton(automaton_id)
-    return afd_to_afn(afd)
-
-@app.post("/automaton/{automaton_id}/to_afd", response_model=Automaton)
-def convert_to_afd(automaton_id: int):
-    afn = read_automaton(automaton_id)
-    return afn_to_afd(afn)
+@app.post("/convert-afn-to-afd", response_model=Automaton)
+def convert_afn_to_afd(afn: Automaton):
+    afd_completo = converter_afn_para_afd_completo(afn)
+    afd_minimizado = minimizar_afd(afd_completo)
+    return afd_minimizado
 
 @app.get("/automaton/{automaton_id}/type")
 def get_automaton_type(automaton_id: int):
@@ -40,3 +36,5 @@ def get_automaton_type(automaton_id: int):
         return {"type": "AFD"}
     else:
         return {"type": "AFN"}
+    
+    

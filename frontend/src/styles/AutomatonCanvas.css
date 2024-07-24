@@ -1,0 +1,9 @@
+.automaton-canvas {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  margin: 20px 0;
+  cursor: pointer;
+}
