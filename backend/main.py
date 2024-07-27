@@ -23,12 +23,26 @@ def recognize_string_route(automaton_id: int, input_string: str):
     automaton = read_automaton(automaton_id)
     return {"recognized": recognize_string(automaton, input_string)}
 
-@app.post("/convert-afn-to-afd", response_model=Automaton)
-def convert_afn_to_afd(afn: Automaton):
+@app.post("/automaton/{automaton_id}/convert-afn-to-afd", response_model=int)
+def convert_afn_to_afd(automaton_id: int):
+    afn = read_automaton(automaton_id)
     afd_completo = converter_afn_para_afd_completo(afn)
     afd_minimizado = minimizar_afd(afd_completo)
-    return afd_minimizado
+    
+    return create_automaton(afd_minimizado) 
 
+
+@app.get("/automaton/{automaton_id}/minify")
+def minify(automaton_id: int):
+    automaton = read_automaton(automaton_id)
+    if is_afd(automaton):
+        afd = read_automaton(automaton_id)
+        afd_minimizado = minimizar_afd(afd)
+        return afd_minimizado
+    else:
+        raise HTTPException(status_code=400, detail="Error: The automaton is not an AFD. It is an AFN).")
+    
+    
 @app.get("/automaton/{automaton_id}/type")
 def get_automaton_type(automaton_id: int):
     automaton = read_automaton(automaton_id)
@@ -38,3 +52,15 @@ def get_automaton_type(automaton_id: int):
         return {"type": "AFN"}
     
     
+@app.post("/automaton/{automaton_id}/equivalence")
+def recognize_string_route(automaton_id: int, input_string: str):
+    automaton = read_automaton(automaton_id)
+    return {"recognized": recognize_string(automaton, input_string)}
+
+
+@app.post("/automaton/{automaton_id}/equivalence/{other_id}")
+def equivalence_route(automaton_id: int, second_automaton_id: int, input_string: str):
+    automaton1 = read_automaton(automaton_id)
+    automaton2 = read_automaton(second_automaton_id)
+    if (recognize_string(automaton1, input_string) & recognize_string(automaton2, input_string) ):
+           return {"are equivalent": "true"}
