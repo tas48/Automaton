@@ -50,17 +50,11 @@ def get_automaton_type(automaton_id: int):
         return {"type": "AFD"}
     else:
         return {"type": "AFN"}
-    
-    
-@app.post("/automaton/{automaton_id}/equivalence")
-def recognize_string_route(automaton_id: int, input_string: str):
-    automaton = read_automaton(automaton_id)
-    return {"recognized": recognize_string(automaton, input_string)}
 
 
 @app.post("/automaton/{automaton_id}/equivalence/{other_id}")
 def equivalence_route(automaton_id: int, second_automaton_id: int, input_string: str):
     automaton1 = read_automaton(automaton_id)
     automaton2 = read_automaton(second_automaton_id)
-    if (recognize_string(automaton1, input_string) & recognize_string(automaton2, input_string) ):
+    if (recognize_string(automaton1, input_string) and recognize_string(automaton2, input_string) ):
            return {"are equivalent": "true"}
