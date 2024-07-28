@@ -51,10 +51,24 @@ def get_automaton_type(automaton_id: int):
     else:
         return {"type": "AFN"}
 
-
-@app.post("/automaton/{automaton_id}/equivalence/{other_id}")
+@app.post("/automaton/{automaton_id}/equivalence/{second_automaton_id}")
 def equivalence_route(automaton_id: int, second_automaton_id: int, input_string: str):
-    automaton1 = read_automaton(automaton_id)
-    automaton2 = read_automaton(second_automaton_id)
-    if (recognize_string(automaton1, input_string) and recognize_string(automaton2, input_string) ):
-           return {"are equivalent": "true"}
+    try:
+        automaton1 = read_automaton(automaton_id)
+        automaton2 = read_automaton(second_automaton_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao ler os autômatos: {e}")
+
+    try:
+        recognizes_automaton1 = recognize_string(automaton1, input_string)
+        recognizes_automaton2 = recognize_string(automaton2, input_string)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao reconhecer a string nos autômatos: {e}")
+
+    are_equivalent = recognizes_automaton1 == recognizes_automaton2
+
+    return {
+        "automaton1_accepts": int(recognizes_automaton1),
+        "automaton2_accepts": int(recognizes_automaton2),
+        "are_equivalent": are_equivalent
+    }
