@@ -10,11 +10,15 @@ next_id = 1
 def list_automata() -> Dict[int, Automaton]:
     return automata_db
 
-def create_automaton(automaton: Automaton) -> int:
+def create_automaton(automaton: Automaton):    
     global next_id
     automata_db[next_id] = automaton
     next_id += 1
-    return next_id - 1
+    automaton_id = next_id - 1
+    raise HTTPException(
+        status_code=201,
+        detail={"automaton_id": automaton_id}
+    )
 
 def read_automaton(automaton_id: int) -> Automaton:
     if automaton_id in automata_db:
@@ -36,46 +40,6 @@ def recognize_string(automaton: Automaton, input_string: str) -> bool:
         current_states = next_states
     
     return any(state in automaton.accept_states for state in current_states)
-
-
-def afn_to_afd(afn: Automaton) -> Automaton:
-    state_sets = [frozenset([afn.start_state])]
-    new_states = []
-    new_transitions = []
-    state_mapping = {frozenset([afn.start_state]): 'S0'}
-    state_count = 1
-
-    while state_sets:
-        current_set = state_sets.pop(0)
-        if current_set not in new_states:
-            new_states.append(current_set)
-            for symbol in afn.alphabet:
-                next_set = frozenset(
-                    sum([list(transition.next_state for transition in afn.transitions 
-                              if transition.current_state == state and transition.symbol == symbol) 
-                         for state in current_set], [])
-                )
-                if next_set not in state_mapping:
-                    state_mapping[next_set] = f'S{state_count}'
-                    state_count += 1
-                if next_set:
-                    new_transitions.append(Transition(
-                        current_state=state_mapping[current_set],
-                        symbol=symbol,
-                        next_state=state_mapping[next_set]
-                    ))
-                if next_set and next_set not in state_sets:
-                    state_sets.append(next_set)
-
-    new_accept_states = [state_mapping[state] for state in new_states if any(s in afn.accept_states for s in state)]
-
-    return Automaton(
-        states=list(state_mapping.values()),
-        alphabet=afn.alphabet,
-        transitions=new_transitions,
-        start_state=state_mapping[frozenset([afn.start_state])],
-        accept_states=new_accept_states
-    )
 
 def is_afd(automaton: Automaton) -> bool:
     transition_count = {}

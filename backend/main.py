@@ -1,10 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict   
-from functions import create_automaton, read_automaton, recognize_string, afn_to_afd, is_afd, list_automata, converter_afn_para_afd_completo, minimizar_afd
+from functions import create_automaton, read_automaton, recognize_string, is_afd, list_automata, converter_afn_para_afd_completo, minimizar_afd
 from automaton import Automaton, Transition
 
 app = FastAPI()
+
+#ADICIONAR CODIGO DE PREVENÇÃO A CORS AQUI
 
 @app.get("/", response_model=Dict[int, Automaton])
 def list_automata_route():
