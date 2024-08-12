@@ -1,8 +1,9 @@
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Tuple
 from fastapi import HTTPException
 from automaton import Automaton, Transition
 from itertools import chain, combinations
 from collections import deque
+
 # Banco de dados simulado
 automata_db: Dict[int, Automaton] = {}
 next_id = 1
@@ -130,7 +131,7 @@ def eliminar_estados(afd: Automaton) -> Automaton:
         start_state=afd.start_state,
         accept_states=estados_de_aceitacao_filtrados
     )
-   
+    
 def converter_afn_para_afd(afn: Automaton) -> Automaton:
     tabela_AFD = montar_tabela(afn)
     
@@ -138,54 +139,116 @@ def converter_afn_para_afd(afn: Automaton) -> Automaton:
     
     return AFD_estados_inalcancaveis_eliminados
 
-def minimizar_afd(afd: Automaton) -> Automaton:
-    estados = afd.states
-    estados_finais = set(afd.accept_states)
-    alfabeto = afd.alphabet
-    transicoes = { (t.current_state, t.symbol): t.next_state for t in afd.transitions }
+def minimize_automaton(automaton: Automaton) -> Automaton:
+    # Completar o autômato (adicionar estado D se necessário)
+    complete_automaton(automaton)
+    
+    # Passo 1: Construir a tabela triangular para estados equivalentes
+    pairs = create_state_pairs(automaton.states)
+    
+    # Passo 2: Marcar pares trivialmente não-equivalentes (estado final vs estado não-final)
+    marked = mark_trivial_pairs(pairs, automaton.accept_states)
+    
+    # Passo 3: Marcar pares não-equivalentes baseados nas transições
+    mark_non_equivalent_pairs(pairs, marked, automaton)
+    
+    # Passo 4: Unificar os estados equivalentes (não-marcados)
+    unified_states, new_transitions = unify_equivalent_states(pairs, marked, automaton)
+    
+    # Passo 5: Construir o autômato minimizado
+    minimized_automaton = Automaton(
+        states=list(unified_states),
+        alphabet=automaton.alphabet,
+        transitions=new_transitions,
+        start_state=automaton.start_state,
+        accept_states=[state for state in unified_states if state in automaton.accept_states]
+    )
+    
+    # Passo 6: Excluir estados inúteis
+    minimized_automaton = eliminate_unreachable_states(minimized_automaton)
+    
+    return minimized_automaton
 
-    P = [estados_finais, set(estados) - estados_finais]
-    W = [estados_finais.copy()]
+def complete_automaton(automaton: Automaton):
+    missing_transitions = []
+    d_state = "D"
+    if d_state not in automaton.states:
+        automaton.states.append(d_state)
+    
+    for state in automaton.states:
+        for symbol in automaton.alphabet:
+            if not any(t.current_state == state and t.symbol == symbol for t in automaton.transitions):
+                missing_transitions.append(Transition(current_state=state, symbol=symbol, next_state=d_state))
+    
+    automaton.transitions.extend(missing_transitions)
 
-    while W:
-        A = W.pop()
-        for simbolo in alfabeto:
-            X = {estado for estado in estados if (estado, simbolo) in transicoes and transicoes[(estado, simbolo)] in A}
-            new_P = []
-            for Y in P:
-                intersecao = Y & X
-                diferenca = Y - X
-                if intersecao and diferenca:
-                    new_P.extend([intersecao, diferenca])
-                    if Y in W:
-                        W.remove(Y)
-                        W.extend([intersecao, diferenca])
-                    else:
-                        if len(intersecao) <= len(diferenca):
-                            W.append(intersecao)
-                        else:
-                            W.append(diferenca)
-                else:
-                    new_P.append(Y)
-            P = new_P
+def create_state_pairs(states: List[str]) -> List[Tuple[str, str]]:
+    pairs = []
+    for i in range(len(states)):
+        for j in range(i + 1, len(states)):
+            pairs.append((states[i], states[j]))
+    return pairs
 
-    novo_estado = {}
-    for particao in P:
-        representacao = frozenset(particao)
-        for estado in particao:
-            novo_estado[estado] = representacao
+def mark_trivial_pairs(pairs: List[Tuple[str, str]], accept_states: List[str]) -> Dict[Tuple[str, str], bool]:
+    marked = {}
+    for q1, q2 in pairs:
+        if (q1 in accept_states and q2 not in accept_states) or (q1 not in accept_states and q2 in accept_states):
+            marked[(q1, q2)] = True
+        else:
+            marked[(q1, q2)] = False
+    return marked
 
-    novos_estados = set(novo_estado.values())
-    novo_estado_inicial = novo_estado[afd.start_state]
-    novos_estados_finais = {novo_estado[estado] for estado in afd.accept_states}
-    novas_transicoes = {}
-    for (estado, simbolo), prox_estado in transicoes.items():
-        novas_transicoes[(novo_estado[estado], simbolo)] = novo_estado[prox_estado]
+def mark_non_equivalent_pairs(pairs: List[Tuple[str, str]], marked: Dict[Tuple[str, str], bool], automaton: Automaton):
+    changed = True
+    while changed:
+        changed = False
+        for q1, q2 in pairs:
+            if not marked[(q1, q2)]:
+                for symbol in automaton.alphabet:
+                    p1 = next((t.next_state for t in automaton.transitions if t.current_state == q1 and t.symbol == symbol), None)
+                    p2 = next((t.next_state for t in automaton.transitions if t.current_state == q2 and t.symbol == symbol), None)
+                    if p1 and p2 and p1 != p2:
+                        if (p1, p2) in marked and marked[(p1, p2)]:
+                            marked[(q1, q2)] = True
+                            changed = True
+                            break
 
+def unify_equivalent_states(pairs: List[Tuple[str, str]], marked: Dict[Tuple[str, str], bool], automaton: Automaton) -> Tuple[set, List[Transition]]:
+    equivalent_classes = {state: state for state in automaton.states}
+    for q1, q2 in pairs:
+        if not marked[(q1, q2)]:
+            equivalent_classes[q2] = equivalent_classes[q1]
+    
+    new_states = set(equivalent_classes.values())
+    new_transitions = []
+    for t in automaton.transitions:
+        current_state = equivalent_classes[t.current_state]
+        next_state = equivalent_classes[t.next_state]
+        new_transition = Transition(current_state=current_state, symbol=t.symbol, next_state=next_state)
+        if new_transition not in new_transitions:
+            new_transitions.append(new_transition)
+    
+    return new_states, new_transitions
+
+def eliminate_unreachable_states(automaton: Automaton) -> Automaton:
+    reachable = set()
+    to_explore = {automaton.start_state}
+    
+    while to_explore:
+        state = to_explore.pop()
+        if state not in reachable:
+            reachable.add(state)
+            for t in automaton.transitions:
+                if t.current_state == state:
+                    to_explore.add(t.next_state)
+    
+    reachable_states = list(reachable)
+    new_transitions = [t for t in automaton.transitions if t.current_state in reachable and t.next_state in reachable]
+    
     return Automaton(
-        states=["_".join(sorted(e)) for e in novos_estados],
-        alphabet=alfabeto,
-        transitions=[Transition(current_state="_".join(sorted(k[0])), symbol=k[1], next_state="_".join(sorted(v))) for k, v in novas_transicoes.items()],
-        start_state="_".join(sorted(novo_estado_inicial)),
-        accept_states=["_".join(sorted(e)) for e in novos_estados_finais]
+        states=reachable_states,
+        alphabet=automaton.alphabet,
+        transitions=new_transitions,
+        start_state=automaton.start_state,
+        accept_states=[s for s in automaton.accept_states if s in reachable]
     )
