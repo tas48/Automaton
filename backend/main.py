@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict   
-from functions import create_automaton, read_automaton, recognize_string, is_afd, list_automata, converter_afn_para_afd_completo, minimizar_afd
+from functions import create_automaton, read_automaton, recognize_string, is_afd, list_automata, converter_afn_para_afd
 from automaton import Automaton, Transition
 
 app = FastAPI()
@@ -28,11 +28,9 @@ def recognize_string_route(automaton_id: int, input_string: str):
 @app.post("/automaton/{automaton_id}/convert-afn-to-afd", response_model=int)
 def convert_afn_to_afd(automaton_id: int):
     afn = read_automaton(automaton_id)
-    afd_completo = converter_afn_para_afd_completo(afn)
-    afd_minimizado = minimizar_afd(afd_completo)
+    afd_convertido = converter_afn_para_afd(afn)
     
-    return create_automaton(afd_minimizado) 
-
+    return create_automaton(afd_convertido) 
 
 @app.get("/automaton/{automaton_id}/minify")
 def minify(automaton_id: int):

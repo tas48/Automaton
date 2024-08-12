@@ -1,7 +1,8 @@
-from typing import List, Dict
+from typing import List, Dict, Set
 from fastapi import HTTPException
 from automaton import Automaton, Transition
-
+from itertools import chain, combinations
+from collections import deque
 # Banco de dados simulado
 automata_db: Dict[int, Automaton] = {}
 next_id = 1
@@ -55,93 +56,87 @@ def is_afd(automaton: Automaton) -> bool:
             return False
     return True
 
-def converter_afn_para_afd(afn: Automaton) -> Automaton:
-    def obter_closure(estados, transicoes):
-        closure = set(estados)
-        pilha = list(estados)
-        while pilha:
-            estado = pilha.pop()
-            if (estado, '') in transicoes:
-                for prox_estado in transicoes[(estado, '')]:
-                    if prox_estado not in closure:
-                        closure.add(prox_estado)
-                        pilha.append(prox_estado)
-        return closure
-
-    def mover(estados, simbolo, transicoes):
-        resultado = set()
-        for estado in estados:
-            if (estado, simbolo) in transicoes:
-                resultado.update(transicoes[(estado, simbolo)])
-        return resultado
-
-    transicoes_afn = {}
-    for t in afn.transitions:
-        if (t.current_state, t.symbol) not in transicoes_afn:
-            transicoes_afn[(t.current_state, t.symbol)] = set()
-        transicoes_afn[(t.current_state, t.symbol)].add(t.next_state)
-
-    estados_afd = []
-    transicoes_afd = {}
-    estados_finais_afd = set()
-    estado_inicial_afd = frozenset(obter_closure({afn.start_state}, transicoes_afn))
-    estados_afd.append(estado_inicial_afd)
-    if any(estado in afn.accept_states for estado in estado_inicial_afd):
-        estados_finais_afd.add(estado_inicial_afd)
-    pilha = [estado_inicial_afd]
-
-    while pilha:
-        estado_atual = pilha.pop()
+def montar_tabela(afn: Automaton) -> Automaton:
+    # Gerar todos os novos estados como combinações de estados do AFN
+    novos_estados = []
+    for r in range(1, len(afn.states) + 1):
+        novos_estados.extend([''.join(sorted(comb)) for comb in combinations(afn.states, r)])
+    
+    # Gerar todas as transições combinadas
+    transicoes_combinadas = []
+    for estado_atual_comb in novos_estados:
         for simbolo in afn.alphabet:
-            prox_estados = obter_closure(mover(estado_atual, simbolo, transicoes_afn), transicoes_afn)
-            if prox_estados:
-                prox_estados_frozen = frozenset(prox_estados)
-                if prox_estados_frozen not in estados_afd:
-                    estados_afd.append(prox_estados_frozen)
-                    pilha.append(prox_estados_frozen)
-                    if any(estado in afn.accept_states for estado in prox_estados_frozen):
-                        estados_finais_afd.add(prox_estados_frozen)
-                transicoes_afd[(estado_atual, simbolo)] = prox_estados_frozen
+            estados_destino = set()
+            for transicao in afn.transitions:
+                if transicao.current_state in estado_atual_comb and transicao.symbol == simbolo:
+                    estados_destino.add(transicao.next_state)
 
-    estados_afd = ["_".join(sorted(e)) for e in estados_afd]
-    estados_finais_afd = ["_".join(sorted(e)) for e in estados_finais_afd]
-    transicoes_afd = {(tuple(sorted(k[0])), k[1]): list(sorted(v)) for k, v in transicoes_afd.items()}
-
+            # Se houver estados de destino, criar uma nova transição
+            if estados_destino:
+                estado_destino_comb = ''.join(sorted(estados_destino))
+                transicoes_combinadas.append(Transition(
+                    current_state=estado_atual_comb,
+                    symbol=simbolo,
+                    next_state=estado_destino_comb
+                ))
+    
+    # Definir os novos estados de aceitação
+    novos_estados_de_aceitacao = [estado for estado in novos_estados if any(estado.find(accept_state) != -1 for accept_state in afn.accept_states)]
+    
     return Automaton(
-        states=estados_afd,
+        states=novos_estados,
         alphabet=afn.alphabet,
-        transitions=[Transition(current_state="_".join(sorted(k[0])), symbol=k[1], next_state="_".join(sorted(v))) for k, v in transicoes_afd.items()],
-        start_state="_".join(sorted(estado_inicial_afd)),
-        accept_states=estados_finais_afd
+        transitions=transicoes_combinadas,
+        start_state=afn.start_state,
+        accept_states=novos_estados_de_aceitacao
     )
 
-def eliminar_estados_inalcancaveis(afd: Automaton) -> Automaton:
-    estados_alcancaveis = set()
-    pilha = [afd.start_state]
-    while pilha:
-        estado = pilha.pop()
-        if estado not in estados_alcancaveis:
-            estados_alcancaveis.add(estado)
-            for t in afd.transitions:
-                if t.current_state == estado and t.next_state not in estados_alcancaveis:
-                    pilha.append(t.next_state)
-
-    estados_finais_afd = [estado for estado in afd.accept_states if estado in estados_alcancaveis]
-    transicoes_afd = [t for t in afd.transitions if t.current_state in estados_alcancaveis and t.next_state in estados_alcancaveis]
+def eliminar_estados(afd: Automaton) -> Automaton:
+    # Função para encontrar todos os estados acessíveis a partir do estado inicial
+    def estados_acessiveis(estado_inicial: str, transicoes: List[Transition]) -> Set[str]:
+        estados_visitados = set()
+        fila = deque([estado_inicial])
+        
+        while fila:
+            estado_atual = fila.popleft()
+            if estado_atual not in estados_visitados:
+                estados_visitados.add(estado_atual)
+                # Enfileirar todos os próximos estados alcançáveis
+                for transicao in transicoes:
+                    if transicao.current_state == estado_atual and transicao.next_state not in estados_visitados:
+                        fila.append(transicao.next_state)
+        
+        return estados_visitados
+    
+    # Encontrar todos os estados acessíveis
+    estados_acessiveis_set = estados_acessiveis(afd.start_state, afd.transitions)
+    
+    # Filtrar transições para manter apenas as que têm estados acessíveis
+    transicoes_filtradas = [
+        transicao for transicao in afd.transitions
+        if transicao.current_state in estados_acessiveis_set and transicao.next_state in estados_acessiveis_set
+    ]
+    
+    # Filtrar estados para manter apenas os acessíveis
+    estados_filtrados = [estado for estado in afd.states if estado in estados_acessiveis_set]
+    
+    # Filtrar estados de aceitação para manter apenas os acessíveis
+    estados_de_aceitacao_filtrados = [estado for estado in afd.accept_states if estado in estados_acessiveis_set]
 
     return Automaton(
-        states=list(estados_alcancaveis),
+        states=estados_filtrados,
         alphabet=afd.alphabet,
-        transitions=transicoes_afd,
+        transitions=transicoes_filtradas,
         start_state=afd.start_state,
-        accept_states=estados_finais_afd
+        accept_states=estados_de_aceitacao_filtrados
     )
-
-def converter_afn_para_afd_completo(afn: Automaton) -> Automaton:
-    afd = converter_afn_para_afd(afn)
-    afd = eliminar_estados_inalcancaveis(afd)
-    return afd
-
+   
+def converter_afn_para_afd(afn: Automaton) -> Automaton:
+    tabela_AFD = montar_tabela(afn)
+    
+    AFD_estados_inalcancaveis_eliminados = eliminar_estados(tabela_AFD)
+    
+    return AFD_estados_inalcancaveis_eliminados
 
 def minimizar_afd(afd: Automaton) -> Automaton:
     estados = afd.states
