@@ -246,9 +246,32 @@ def eliminate_unreachable_states(automaton: Automaton) -> Automaton:
     new_transitions = [t for t in automaton.transitions if t.current_state in reachable and t.next_state in reachable]
     
     return Automaton(
-        states=reachable_states,
+        states=sorted(reachable_states),
         alphabet=automaton.alphabet,
         transitions=new_transitions,
         start_state=automaton.start_state,
-        accept_states=[s for s in automaton.accept_states if s in reachable]
+        accept_states=[s for s in sorted(automaton.accept_states) if s in reachable]
     )
+    
+#Função de normalização(padroniza os nomes para validação) do automato para verificação de equivalência
+def normalize_automaton(automaton: Automaton) -> Automaton:
+    state_mapping = {state: f'q{i}' for i, state in enumerate(sorted(automaton.states))}
+    
+    normalized_transitions = [
+        Transition(
+            current_state=state_mapping[t.current_state],
+            symbol=t.symbol,
+            next_state=state_mapping[t.next_state]
+        )
+        for t in automaton.transitions
+    ]
+    
+    normalized_automaton = Automaton(
+        states=sorted(state_mapping.values()),
+        alphabet=automaton.alphabet,
+        transitions=normalized_transitions,
+        start_state=state_mapping[automaton.start_state],
+        accept_states=[state_mapping[state] for state in automaton.accept_states]
+    )
+    
+    return normalized_automaton

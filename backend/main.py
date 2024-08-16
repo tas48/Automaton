@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict   
-from functions import create_automaton, read_automaton, recognize_string, minimize_automaton, is_afd, list_automata, converter_afn_para_afd
+from functions import create_automaton, read_automaton, recognize_string, minimize_automaton, is_afd, list_automata, converter_afn_para_afd, normalize_automaton
 from automaton import Automaton, Transition
 
 app = FastAPI()
@@ -59,12 +59,16 @@ def equivalence_route(automaton_id: int, second_automaton_id: int) -> bool:
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erro ao ler os autômatos: {e}")
 
+    # Padronização dos nomes para verificar equivalência
+    normalized_automaton1 = normalize_automaton(minimized_automaton1)
+    normalized_automaton2 = normalize_automaton(minimized_automaton1)
+
     # Comparação entre os autômatos minimizados
     return (
-        set(minimized_automaton1.states) == set(minimized_automaton2.states) and
-        set(minimized_automaton1.alphabet) == set(minimized_automaton2.alphabet) and
-        set((t.current_state, t.symbol, t.next_state) for t in minimized_automaton1.transitions) ==
-        set((t.current_state, t.symbol, t.next_state) for t in minimized_automaton2.transitions) and
-        minimized_automaton1.start_state == minimized_automaton2.start_state and
-        set(minimized_automaton1.accept_states) == set(minimized_automaton2.accept_states)
+        normalized_automaton1.states == normalized_automaton2.states and
+        normalized_automaton1.alphabet == normalized_automaton2.alphabet and
+        set((t.current_state, t.symbol, t.next_state) for t in normalized_automaton1.transitions) ==
+        set((t.current_state, t.symbol, t.next_state) for t in normalized_automaton2.transitions) and
+        normalized_automaton1.start_state == normalized_automaton2.start_state and
+        set(normalized_automaton1.accept_states) == set(normalized_automaton2.accept_states)
     )
