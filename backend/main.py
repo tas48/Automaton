@@ -61,7 +61,7 @@ def equivalence_route(automaton_id: int, second_automaton_id: int) -> bool:
 
     # Padronização dos nomes para verificar equivalência
     normalized_automaton1 = normalize_automaton(minimized_automaton1)
-    normalized_automaton2 = normalize_automaton(minimized_automaton1)
+    normalized_automaton2 = normalize_automaton(minimized_automaton2)
 
     # Comparação entre os autômatos minimizados
     return (
