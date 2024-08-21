@@ -54,8 +54,9 @@ def get_automaton_type(automaton_id: int):
 @app.post("/automaton/{automaton_id}/equivalence/{second_automaton_id}")
 def equivalence_route(automaton_id: int, second_automaton_id: int) -> bool:
     try:
-        minimized_automaton1 = read_automaton(automaton_id)
-        minimized_automaton2 = read_automaton(second_automaton_id)
+        # Ler e minimizar os autômatos
+        minimized_automaton1 = minimize_automaton(read_automaton(automaton_id))
+        minimized_automaton2 = minimize_automaton(read_automaton(second_automaton_id))
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erro ao ler os autômatos: {e}")
 
@@ -63,7 +64,7 @@ def equivalence_route(automaton_id: int, second_automaton_id: int) -> bool:
     normalized_automaton1 = normalize_automaton(minimized_automaton1)
     normalized_automaton2 = normalize_automaton(minimized_automaton2)
 
-    # Comparação entre os autômatos minimizados
+    # Comparação entre os autômatos minimizados e normalizados
     return (
         normalized_automaton1.states == normalized_automaton2.states and
         normalized_automaton1.alphabet == normalized_automaton2.alphabet and
@@ -72,3 +73,4 @@ def equivalence_route(automaton_id: int, second_automaton_id: int) -> bool:
         normalized_automaton1.start_state == normalized_automaton2.start_state and
         set(normalized_automaton1.accept_states) == set(normalized_automaton2.accept_states)
     )
+     

@@ -8,7 +8,6 @@ from collections import deque
 automata_db: Dict[int, Automaton] = {}
 next_id = 1
 
-
 def list_automata() -> Dict[int, Automaton]:
     return automata_db
 
@@ -140,22 +139,22 @@ def converter_afn_para_afd(afn: Automaton) -> Automaton:
     return AFD_estados_inalcancaveis_eliminados
 
 def minimize_automaton(automaton: Automaton) -> Automaton:
-    # Completar o autômato (adicionar estado D se necessário)
+    #Completar o autômato (adicionar estado D se necessário)
     complete_automaton(automaton)
     
-    # Passo 1: Construir a tabela triangular para estados equivalentes
+    #Construir a tabela triangular para estados equivalentes
     pairs = create_state_pairs(automaton.states)
     
     # Passo 2: Marcar pares trivialmente não-equivalentes (estado final vs estado não-final)
     marked = mark_trivial_pairs(pairs, automaton.accept_states)
     
-    # Passo 3: Marcar pares não-equivalentes baseados nas transições
+    #Marcar pares não-equivalentes baseados nas transições
     mark_non_equivalent_pairs(pairs, marked, automaton)
     
-    # Passo 4: Unificar os estados equivalentes (não-marcados)
+    #Unificar os estados equivalentes (não-marcados)
     unified_states, new_transitions = unify_equivalent_states(pairs, marked, automaton)
     
-    # Passo 5: Construir o autômato minimizado
+    #Construir o autômato minimizado
     minimized_automaton = Automaton(
         states=list(unified_states),
         alphabet=automaton.alphabet,
@@ -164,14 +163,24 @@ def minimize_automaton(automaton: Automaton) -> Automaton:
         accept_states=[state for state in unified_states if state in automaton.accept_states]
     )
     
-    # Passo 6: Excluir estados inúteis
+    #Excluir estados inúteis
     minimized_automaton = eliminate_unreachable_states(minimized_automaton)
     
-    # Passo 7: Remover o estado 'D' e suas transições
+    #Remover o estado 'D' e suas transições, se existir
     minimized_automaton.states = [state for state in minimized_automaton.states if state != 'D']
     minimized_automaton.transitions = [t for t in minimized_automaton.transitions if t.current_state != 'D' and t.next_state != 'D']
     
+    #Ordenar os estados e transições para consistência
+    minimized_automaton.states.sort()
+    minimized_automaton.transitions.sort(key=lambda t: (t.current_state, t.symbol, t.next_state))
     
+    #Atualizar o autômato original com o minimizado
+    automaton.states = minimized_automaton.states
+    automaton.alphabet = minimized_automaton.alphabet
+    automaton.transitions = minimized_automaton.transitions
+    automaton.start_state = minimized_automaton.start_state
+    automaton.accept_states = minimized_automaton.accept_states
+
     return minimized_automaton
 
 def complete_automaton(automaton: Automaton):
