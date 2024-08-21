@@ -167,6 +167,11 @@ def minimize_automaton(automaton: Automaton) -> Automaton:
     # Passo 6: Excluir estados inúteis
     minimized_automaton = eliminate_unreachable_states(minimized_automaton)
     
+    # Passo 7: Remover o estado 'D' e suas transições
+    minimized_automaton.states = [state for state in minimized_automaton.states if state != 'D']
+    minimized_automaton.transitions = [t for t in minimized_automaton.transitions if t.current_state != 'D' and t.next_state != 'D']
+    
+    
     return minimized_automaton
 
 def complete_automaton(automaton: Automaton):
@@ -175,11 +180,17 @@ def complete_automaton(automaton: Automaton):
     if d_state not in automaton.states:
         automaton.states.append(d_state)
     
+        # Adiciona transições do estado 'D' para ele mesmo para todos os símbolos do alfabeto
+    for symbol in automaton.alphabet:
+        if not any(t.current_state == d_state and t.symbol == symbol for t in automaton.transitions):
+            automaton.transitions.append(Transition(current_state=d_state, symbol=symbol, next_state=d_state))
+     
     for state in automaton.states:
         for symbol in automaton.alphabet:
             if not any(t.current_state == state and t.symbol == symbol for t in automaton.transitions):
                 missing_transitions.append(Transition(current_state=state, symbol=symbol, next_state=d_state))
-    
+                
+                
     automaton.transitions.extend(missing_transitions)
 
 def create_state_pairs(states: List[str]) -> List[Tuple[str, str]]:
