@@ -122,3 +122,63 @@ AFD
   "start_state": "q0",
   "accept_states": ["q3"]
 }
+
+Maquina de turing 
+{
+  "turing_machine": {
+    "states": ["q0", "q1", "qa", "qr"],
+    "input_alphabet": ["0", "1"],
+    "tape_alphabet": ["0", "1", "_"],
+    "blank_symbol": "_",
+    "transitions": [
+      {
+        "current_state": "q0",
+        "symbol": "1",
+        "next_state": "q1",
+        "write_symbol": "1",
+        "move_direction": "R"
+      },
+      {
+        "current_state": "q0",
+        "symbol": "0",
+        "next_state": "q0",
+        "write_symbol": "0",
+        "move_direction": "R"
+      },
+      {
+        "current_state": "q0",
+        "symbol": "_",
+        "next_state": "qa",
+        "write_symbol": "_",
+        "move_direction": "R"
+      },
+      {
+        "current_state": "q1",
+        "symbol": "1",
+        "next_state": "q0",
+        "write_symbol": "1",
+        "move_direction": "R"
+      },
+      {
+        "current_state": "q1",
+        "symbol": "0",
+        "next_state": "q1",
+        "write_symbol": "0",
+        "move_direction": "R"
+      },
+      {
+        "current_state": "q1",
+        "symbol": "_",
+        "next_state": "qr",
+        "write_symbol": "_",
+        "move_direction": "R"
+      }
+    ],
+    "initial_state": "q0",
+    "accept_state": "qa",
+    "reject_state": "qr"
+  },
+  "input_word": "101"
+}
+
+a entrada 101 e aceita por tem o numero par de 1s se for trocada a entrada para 100 a entrada e recusada 

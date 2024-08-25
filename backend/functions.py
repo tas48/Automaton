@@ -1,6 +1,6 @@
 from typing import List, Dict, Set, Tuple
 from fastapi import HTTPException
-from automaton import Automaton, Transition
+from automaton import Automaton, Transition, TuringMachine
 from itertools import chain, combinations
 from collections import deque
 
@@ -295,3 +295,37 @@ def normalize_automaton(automaton: Automaton) -> Automaton:
     )
     
     return normalized_automaton
+
+# Função para inicializar a fita da Máquina de Turing
+def initialize_tape(tm: TuringMachine, input_word: str):
+    tm.tape = list(input_word) + [tm.blank_symbol]  # Converte a palavra em uma lista de símbolos e adiciona um símbolo em branco no final
+    tm.head_position = 0  # Define a posição inicial da cabeça de leitura/escrita
+
+# Função que executa a Máquina de Turing com base em uma palavra de entrada
+def run_turing_machine(tm: TuringMachine, input_word: str) -> str:
+    initialize_tape(tm, input_word)  # Inicializa a fita com a palavra de entrada
+    current_state = tm.initial_state  # Define o estado atual como o estado inicial
+
+    while True:
+        if current_state == tm.accept_state:
+            return "Sim"  # Retorna "Sim" se a máquina alcançar o estado de aceitação
+        if current_state == tm.reject_state:
+            return "Não"  # Retorna "Não" se a máquina alcançar o estado de rejeição
+
+        symbol_under_head = tm.tape[tm.head_position]  # Lê o símbolo que está sob a cabeça de leitura/escrita
+        transition_found = False  # Flag para verificar se uma transição foi encontrada
+
+        # Procura uma transição válida para o estado atual e símbolo lido
+        for transition in tm.transitions:
+            if transition.current_state == current_state and transition.symbol == symbol_under_head:
+                tm.tape[tm.head_position] = transition.write_symbol  # Escreve o novo símbolo na fita
+                current_state = transition.next_state  # Muda para o próximo estado
+                if transition.move_direction == 'R':
+                    tm.head_position += 1  # Move a cabeça para a direita
+                elif transition.move_direction == 'L':
+                    tm.head_position -= 1  # Move a cabeça para a esquerda
+                transition_found = True  # Indica que a transição foi encontrada
+                break
+
+        if not transition_found:
+            return "Não"  # Retorna "Não" se nenhuma transição válida for encontrada

@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict   
-from functions import create_automaton, read_automaton, recognize_string, minimize_automaton, is_afd, list_automata, converter_afn_para_afd, normalize_automaton
-from automaton import Automaton, Transition
+from functions import create_automaton, read_automaton, recognize_string, minimize_automaton, is_afd, list_automata, converter_afn_para_afd, normalize_automaton, run_turing_machine
+from automaton import Automaton, Transition, TuringMachine, TuringMachineInput
 
 app = FastAPI()
 
@@ -73,4 +73,10 @@ def equivalence_route(automaton_id: int, second_automaton_id: int) -> bool:
         normalized_automaton1.start_state == normalized_automaton2.start_state and
         set(normalized_automaton1.accept_states) == set(normalized_automaton2.accept_states)
     )
+    
+# Rota que executa a Máquina de Turing
+@app.post("/turing-machine/run")
+def execute_turing_machine(data: TuringMachineInput):
+    result = run_turing_machine(data.turing_machine, data.input_word)  # Executa a máquina com a palavra de entrada
+    return {"result": result}  # Retorna o resultado ("Sim" ou "Não")
      
