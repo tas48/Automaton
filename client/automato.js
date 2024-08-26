@@ -1,5 +1,5 @@
 const canvas = document.getElementById('automatoCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d',  {willReadFrequently: true });
 let states = [];
 let transitions = [];
 let startState = null;
@@ -7,17 +7,22 @@ let finalStates = [];
 let dragging = false;
 let selectedState = null;
 let isMoving = false;
+let isDeleting = false; 
 
 canvas.addEventListener('dblclick', createState);
 canvas.addEventListener('mousedown', startDragging);
 canvas.addEventListener('mousemove', drag);
 canvas.addEventListener('mouseup', endDragging);
+canvas.addEventListener('contextmenu', deleteStateOrTransition);
+document.addEventListener('keydown', handleKeyDown);
+document.addEventListener('keyup', handleKeyUp);
+canvas.addEventListener('mousedown', deleteStateOrTransition); // Escuta o clique do mouse
 
 function createState(event) {
     const x = event.offsetX;
     const y = event.offsetY;
     const id = `q${states.length}`;
-    const newState = { id, x, y, radius: 20 };
+    const newState = { id, x, y, radius: 30 };
     states.push(newState);
     draw();
 }
@@ -106,45 +111,71 @@ function draw() {
 }
 
 function drawState(state) {
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(state.x, state.y, state.radius, 0, Math.PI * 2);
     ctx.stroke();
     if (state === startState) {
         ctx.beginPath();
-        ctx.moveTo(state.x - 30, state.y);
-        ctx.lineTo(state.x - 10, state.y);
+        ctx.moveTo(state.x - 50, state.y);
+        ctx.lineTo(state.x - 35, state.y);
         ctx.stroke();
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(state.x - 45, state.y - 5);
+        ctx.lineTo(state.x - 35, state.y);
+        ctx.lineTo(state.x - 45, state.y + 5);
+        ctx.fill();
     }
     if (finalStates.includes(state.id)) {
         ctx.beginPath();
-        ctx.arc(state.x, state.y, state.radius - 5, 0, Math.PI * 2);
+        ctx.arc(state.x, state.y, state.radius - 6, 0, Math.PI * 2);
         ctx.stroke();
     }
-    ctx.fillText(state.id, state.x - 5, state.y + 5);
+    ctx.font = "20px Arial";  // Aumentar o tamanho da fonte
+    ctx.fillText(state.id, state.x - 15, state.y + 7);
 }
+
 
 function drawArrow(from, to, text) {
     const headlen = 10;
     const dx = to.x - from.x;
     const dy = to.y - from.y;
     const angle = Math.atan2(dy, dx);
-    
+
     if (from === to) {
-        // Self-loop
         const loopRadius = 30;
+        const centerX = from.x;
+        const centerY = from.y - loopRadius;
+
+        // Filtrar todas as transições cíclicas para este estado
+        const cyclicTransitions = transitions.filter(t => t.current_state === from.id && t.next_state === to.id);
+        
+        // Concatenar os símbolos das transições cíclicas, separados por vírgula
+        const combinedText = cyclicTransitions.map(t => t.symbol).join(", ");
+
+        // Desenhar um arco semicircular para a auto-transição
         ctx.beginPath();
-        ctx.arc(from.x, from.y - loopRadius, loopRadius, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, loopRadius, 0.75 * Math.PI, 2.25 * Math.PI);
         ctx.stroke();
-        ctx.fillText(text, from.x + loopRadius + 5, from.y - loopRadius);
+
+        // Desenhar a ponta da seta no final do arco
+        const arrowX = centerX + loopRadius * Math.cos(0.75 * Math.PI);
+        const arrowY = centerY + loopRadius * Math.sin(0.75 * Math.PI);
+
         ctx.beginPath();
-        ctx.moveTo(from.x, from.y - loopRadius * 2);
-        ctx.lineTo(from.x - headlen, from.y - loopRadius * 2 + headlen);
-        ctx.lineTo(from.x + headlen, from.y - loopRadius * 2 + headlen);
-        ctx.lineTo(from.x, from.y - loopRadius * 2);
+        ctx.moveTo(arrowX, arrowY);
+        ctx.lineTo(arrowX - headlen, arrowY - headlen);
+        ctx.lineTo(arrowX + headlen, arrowY - headlen);
+        ctx.closePath();
         ctx.fill();
+
+        // Desenhar o texto da transição próximo ao meio do arco
+        ctx.font = "16px Arial";
+        ctx.fillText(combinedText, centerX + loopRadius + 10, centerY);
     } else {
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const offset = 20;
+        const offset = 30;
         const x1 = from.x + (offset * dy) / dist;
         const y1 = from.y - (offset * dx) / dist;
         const x2 = to.x + (offset * dy) / dist;
@@ -164,11 +195,111 @@ function drawArrow(from, to, text) {
         ctx.lineTo(to.x - headlen * Math.cos(angle + Math.PI / 6), to.y - headlen * Math.sin(angle + Math.PI / 6));
         ctx.lineTo(to.x, to.y);
         ctx.fill();
+
+        ctx.font = "16px Arial";
         ctx.fillText(text, (x1 + x2) / 2, (y1 + y2) / 2);
     }
 }
 
-function exportToJson() {
+function handleKeyDown(event) {
+    if (event.code === 'Space') {
+        isDeleting = true;
+        canvas.style.cursor = 'crosshair'; // Muda o cursor para um "X"
+    }
+}
+
+function handleKeyUp(event) {
+    if (event.code === 'Space') {
+        isDeleting = false;
+        canvas.style.cursor = 'default'; // Retorna o cursor ao padrão
+    }
+}
+
+function deleteStateOrTransition(event) {
+    if (isDeleting && event.button === 0) { // Verifica se o modo de deleção está ativo e o botão esquerdo foi pressionado
+        event.preventDefault();
+
+        const x = event.offsetX;
+        const y = event.offsetY;
+
+        // Verificar se um estado foi clicado
+        const stateToDelete = getStateAtPosition(x, y);
+        if (stateToDelete) {
+            // Remover o estado
+            states = states.filter(state => state !== stateToDelete);
+            
+            // Remover todas as transições associadas ao estado
+            transitions = transitions.filter(transition => transition.current_state !== stateToDelete.id && transition.next_state !== stateToDelete.id);
+            
+            draw();
+            return;
+        }
+
+        // Verificar se uma transição foi clicada
+        const transitionToDelete = getTransitionAtPosition(x, y);
+        if (transitionToDelete) {
+            // Remover a transição
+            transitions = transitions.filter(transition => transition !== transitionToDelete);
+            draw();
+        }
+    }
+}
+
+
+function getTransitionAtPosition(x, y) {
+    // Encontrar a transição mais próxima ao clique
+    for (const transition of transitions) {
+        const fromState = states.find(s => s.id === transition.current_state);
+        const toState = states.find(s => s.id === transition.next_state);
+
+        if (fromState && toState) {
+            // Calcular o ponto médio da linha da transição
+            const midX = (fromState.x + toState.x) / 2;
+            const midY = (fromState.y + toState.y) / 2;
+
+            // Verificar se o clique está próximo ao ponto médio
+            const distance = Math.sqrt((x - midX) ** 2 + (y - midY) ** 2);
+            if (distance < 10) { // Tolerância para considerar a transição clicada
+                return transition;
+            }
+        }
+    }
+    return null;
+}
+
+
+export function isCanvasEmpty() {
+    const pixelData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+    // Verificar se todos os pixels são transparentes
+    for (let i = 0; i < pixelData.length; i += 4) {
+        if (pixelData[i + 3] !== 0) { // Se o valor de alpha (transparência) não for 0
+            return false; // O canvas não está vazio
+        }
+    }
+
+    return true; // O canvas está vazio
+}
+
+
+
+export function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Limpar as variáveis do autômato
+    states = [];
+    transitions = [];
+    startState = null;
+    finalStates = [];
+    selectedState = null;
+    isMoving = false;
+    dragging = false;
+}
+
+
+//funcões pra comunicação com o backend
+
+export function exportToJson() {
     const automaton = {
         states: states.map(s => s.id),
         alphabet: Array.from(new Set(transitions.map(t => t.symbol))),
@@ -176,6 +307,69 @@ function exportToJson() {
         start_state: startState ? startState.id : null,
         accept_states: finalStates
     };
-    document.getElementById('output').textContent = JSON.stringify(automaton, null, 2);
+    return JSON.stringify(automaton, null, 2);  // Retorna o JSON ao invés de definir o textContent
 }
+
+
+
+export function importFromJson(json) {
+    // Limpar os arrays existentes
+    states = [];
+    transitions = [];
+    startState = null;
+    finalStates = [];
+
+    // Parse o JSON se for uma string
+    const automaton = typeof json === "string" ? JSON.parse(json) : json;
+
+    // Restaurar estados
+    automaton.states.forEach((id, index) => {
+        const state = {
+            id: id,
+            x: 150 + index * 150, // Ajuste das posições para espaçamento horizontal
+            y: 150 + (index % 2) * 200, // Alternar y para espaçamento vertical
+            radius: 30
+        };
+        states.push(state);
+    });
+
+    // Restaurar transições
+    automaton.transitions.forEach((transition, index) => {
+        const fromState = states.find(s => s.id === transition.current_state);
+        const toState = states.find(s => s.id === transition.next_state);
+
+        if (fromState && toState) {
+            // Calcular ponto de controle para espaçar as linhas de transição
+            const controlPoint = {
+                x: (fromState.x + toState.x) / 2 + (index % 2 === 0 ? 50 : -50),
+                y: (fromState.y + toState.y) / 2 + (index % 2 === 0 ? -50 : 50)
+            };
+
+            const newTransition = {
+                current_state: transition.current_state,
+                symbol: transition.symbol,
+                next_state: transition.next_state,
+                controlPoint: controlPoint
+            };
+            transitions.push(newTransition);
+        }
+    });
+
+    // Restaurar estado inicial
+    if (automaton.start_state) {
+        startState = states.find(s => s.id === automaton.start_state);
+    }
+
+    // Restaurar estados finais
+    automaton.accept_states.forEach(finalStateId => {
+        const finalState = states.find(s => s.id === finalStateId);
+        if (finalState) {
+            finalStates.push(finalState.id);
+        }
+    });
+
+    // Desenhar o autômato restaurado
+    draw();
+}
+
 

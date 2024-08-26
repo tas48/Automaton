@@ -18,6 +18,7 @@ Este projeto fornece uma API REST para gerenciar e converter autômatos (Autôma
 2. **Crie um ambiente virtual** (Obrigatório):
     Nota: 
     ```sh
+    cd backend
     python3 -m venv venv
     source venv/bin/activate  # No linux/mac 
     venv/scripts/activate # No windows

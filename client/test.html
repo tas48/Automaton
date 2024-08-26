@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criador de Autômatos</title>
+    <link rel="stylesheet" href="styles.css">
+    
+</head>
+<body>
+    <div class="navbar">
+        <button id="minify">Minimizar Autômato</button>
+        <button id="list">Listar Autômatos</button>
+        <button id="word">Reconhecer Cadeia</button>
+        <button id="convert">Converter para AFD</button>
+        <button id="equal">Testar Equivalência</button>
+        <button id="turing">Maquina de Turing</button>
+    </div>
+
+     <!-- Estrutura de paginação oculta -->
+     <div id="pagination" style="display: none;">
+        <button id="prev">Anterior</button>
+        <span id="pageInfo">Página 1 de 1</span>
+        <button id="next">Próximo</button>
+        <button id="exitPagination">Sair</button> 
+    </div>
+
+    <p id="error"></p>
+    <canvas id="automatoCanvas" width="800" height="500"></canvas>
+    <button id="save">Salvar</button>
+    <script type="module" src="index.js"></script>
+    <script type="module" src="automato.js"></script>
+</body>
+</html>

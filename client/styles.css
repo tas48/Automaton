@@ -1,47 +1,112 @@
+/* Global Styles */
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #f7f7f7;
-    color: #333333;
+    background-color: #f5f5f5;
+    color: #2c2c2c;
     text-align: center;
     margin: 0;
     padding: 20px;
+    line-height: 1.6;
 }
 
 h1 {
-    color: #ff6f61;
+    color: #444444;
+    font-size: 2.2rem;
+    margin-bottom: 20px;
+    font-weight: 500;
 }
 
+/* Canvas Styles */
 canvas {
-    border: 2px solid #ff6f61;
-    border-radius: 10px;
+    border: 1px solid #888888;
+    border-radius: 6px;
     background-color: #ffffff;
-    box-shadow: 0px 0px 10px rgba(255, 111, 97, 0.3);
     margin: 20px auto;
     display: block;
+    max-width: 100%;
 }
 
+/* Button Styles */
 button {
-    background-color: #ff6f61;
+    background-color: #555555;
     color: white;
-    border: none;
+    border: 1px solid #444444;
     padding: 10px 20px;
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
+    font-size: 15px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 button:hover {
-    background-color: #ff3f31;
+    background-color: #333333;
+    border-color: #222222;
 }
 
+button:active {
+    background-color: #222222;
+}
+
+/* Output Styles */
 #output {
     background-color: #ffffff;
-    border-radius: 5px;
-    padding: 10px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    padding: 15px;
     margin-top: 20px;
-    color: #333333;
+    color: #2c2c2c;
     text-align: left;
     white-space: pre-wrap;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.5;
+}
+
+/* Navbar Styles */
+.navbar {
+    width: 100%;
+    background-color: #444444;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.navbar button {
+    float: left;
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 12px 16px;
+    text-decoration: none;
+    background-color: #444444;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    transition: background-color 0.2s ease;
+}
+
+.navbar button:hover {
+    background-color: #333333;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+    body {
+        padding: 30px;
+    }
+
+    canvas {
+        max-width: 80%;
+    }
+
+    button {
+        font-size: 16px;
+        padding: 10px 25px;
+    }
+}
+
+#error {
+    color: red;
+    font-weight: bold;
+    margin-top: 20px;
 }

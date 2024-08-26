@@ -3,8 +3,23 @@ from pydantic import BaseModel
 from typing import List, Dict   
 from functions import create_automaton, read_automaton, recognize_string, minimize_automaton, is_afd, list_automata, converter_afn_para_afd, normalize_automaton, run_turing_machine
 from automaton import Automaton, Transition, TuringMachine, TuringMachineInput
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# Configurações do CORS
+origins = [
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permitir estas origens
+    allow_credentials=True,  # Permitir cookies e credenciais
+    allow_methods=["*"],  # Permitir todos os métodos HTTP (GET, POST, etc.)
+    allow_headers=["*"],  # Permitir todos os cabeçalhos
+)
 
 #ADICIONAR CODIGO DE PREVENÇÃO A CORS AQUI
 
