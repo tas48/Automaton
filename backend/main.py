@@ -1,97 +1,87 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict   
-from functions import create_automaton, read_automaton, recognize_string, minimize_automaton, is_afd, list_automata, converter_afn_para_afd, normalize_automaton, run_turing_machine
-from automaton import Automaton, Transition, TuringMachine, TuringMachineInput
+from funcoes import criar_automato, ler_automato, reconhecer_cadeia, minimizar_automato, eh_afd, listar_automatos, converter_afn_para_afd, normalizar_automato, executar_maquina_turing
+from automato import Automato, Transicao, MaquinaDeTuring, EntradaMaquinaDeTuring
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Configurações do CORS
-origins = [
+origens = [
     "http://localhost:5500",
     "http://127.0.0.1:5500"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permitir estas origens
-    allow_credentials=True,  # Permitir cookies e credenciais
-    allow_methods=["*"],  # Permitir todos os métodos HTTP (GET, POST, etc.)
-    allow_headers=["*"],  # Permitir todos os cabeçalhos
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-#ADICIONAR CODIGO DE PREVENÇÃO A CORS AQUI
-
-@app.get("/", response_model=Dict[int, Automaton])
-def list_automata_route():
-    return list_automata()
+@app.get("/", response_model=Dict[int, Automato])
+def listar_automatos_rota():
+    return listar_automatos()
     
-@app.post("/automaton/", response_model=int)
-def create_automaton_route(automaton: Automaton):
-    return create_automaton(automaton)
+@app.post("/automato/", response_model=int)
+def criar_automato_rota(automato: Automato):
+    return criar_automato(automato)
 
-@app.get("/automaton/{automaton_id}", response_model=Automaton)
-def read_automaton_route(automaton_id: int):
-    return read_automaton(automaton_id)
+@app.get("/automato/{automato_id}", response_model=Automato)
+def ler_automato_rota(automato_id: int):
+    return ler_automato(automato_id)
 
-@app.post("/automaton/{automaton_id}/recognize")
-def recognize_string_route(automaton_id: int, input_string: str):
-    automaton = read_automaton(automaton_id)
-    return {"recognized": recognize_string(automaton, input_string)}
+@app.post("/automato/{automato_id}/reconhecer")
+def reconhecer_cadeia_rota(automato_id: int, cadeia: str):
+    automato = ler_automato(automato_id)
+    return {"reconhecido": reconhecer_cadeia(automato, cadeia)}
 
-@app.post("/automaton/{automaton_id}/convert-afn-to-afd", response_model=int)
-def convert_afn_to_afd(automaton_id: int):
-    afn = read_automaton(automaton_id)
+@app.post("/automato/{automato_id}/converter-afn-para-afd", response_model=int)
+def converter_afn_para_afd_rota(automato_id: int):
+    afn = ler_automato(automato_id)
     afd_convertido = converter_afn_para_afd(afn)
-    
-    return create_automaton(afd_convertido) 
+    return criar_automato(afd_convertido) 
 
-@app.get("/automaton/{automaton_id}/minify")
-def minify(automaton_id: int):
-    automaton = read_automaton(automaton_id)
-    if is_afd(automaton):
-        afd = read_automaton(automaton_id)
-        afd_minimizado = minimize_automaton(afd)
+@app.get("/automato/{automato_id}/minimizar")
+def minimizar_rota(automato_id: int):
+    automato = ler_automato(automato_id)
+    if eh_afd(automato):
+        afd = ler_automato(automato_id)
+        afd_minimizado = minimizar_automato(afd)
         return afd_minimizado
     else:
-        raise HTTPException(status_code=400, detail="Error: The automaton is not an AFD. It is an AFN).")
-    
-    
-@app.get("/automaton/{automaton_id}/type")
-def get_automaton_type(automaton_id: int):
-    automaton = read_automaton(automaton_id)
-    if is_afd(automaton):
-        return {"type": "AFD"}
-    else:
-        return {"type": "AFN"}
+        raise HTTPException(status_code=400, detail="Erro: O autômato não é um AFD. É um AFN.")
 
-@app.post("/automaton/{automaton_id}/equivalence/{second_automaton_id}")
-def equivalence_route(automaton_id: int, second_automaton_id: int) -> bool:
+@app.get("/automato/{automato_id}/tipo")
+def obter_tipo_automato(automato_id: int):
+    automato = ler_automato(automato_id)
+    if eh_afd(automato):
+        return {"tipo": "AFD"}
+    else:
+        return {"tipo": "AFN"}
+
+@app.post("/automato/{automato_id}/equivalencia/{segundo_automato_id}")
+def equivalencia_rota(automato_id: int, segundo_automato_id: int) -> bool:
     try:
-        # Ler e minimizar os autômatos
-        minimized_automaton1 = minimize_automaton(read_automaton(automaton_id))
-        minimized_automaton2 = minimize_automaton(read_automaton(second_automaton_id))
+        automato_minimizado1 = minimizar_automato(ler_automato(automato_id))
+        automato_minimizado2 = minimizar_automato(ler_automato(segundo_automato_id))
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erro ao ler os autômatos: {e}")
 
-    # Padronização dos nomes para verificar equivalência
-    normalized_automaton1 = normalize_automaton(minimized_automaton1)
-    normalized_automaton2 = normalize_automaton(minimized_automaton2)
+    automato_normalizado1 = normalizar_automato(automato_minimizado1)
+    automato_normalizado2 = normalizar_automato(automato_minimizado2)
 
-    # Comparação entre os autômatos minimizados e normalizados
     return (
-        normalized_automaton1.states == normalized_automaton2.states and
-        normalized_automaton1.alphabet == normalized_automaton2.alphabet and
-        set((t.current_state, t.symbol, t.next_state) for t in normalized_automaton1.transitions) ==
-        set((t.current_state, t.symbol, t.next_state) for t in normalized_automaton2.transitions) and
-        normalized_automaton1.start_state == normalized_automaton2.start_state and
-        set(normalized_automaton1.accept_states) == set(normalized_automaton2.accept_states)
+        automato_normalizado1.estados == automato_normalizado2.estados and
+        automato_normalizado1.alfabeto == automato_normalizado2.alfabeto and
+        set((t.estado_atual, t.simbolo, t.proximo_estado) for t in automato_normalizado1.transicoes) ==
+        set((t.estado_atual, t.simbolo, t.proximo_estado) for t in automato_normalizado2.transicoes) and
+        automato_normalizado1.estado_inicial == automato_normalizado2.estado_inicial and
+        set(automato_normalizado1.estados_de_aceitacao) == set(automato_normalizado2.estados_de_aceitacao)
     )
     
-# Rota que executa a Máquina de Turing
-@app.post("/turing-machine/run")
-def execute_turing_machine(data: TuringMachineInput):
-    result = run_turing_machine(data.turing_machine, data.input_word)  # Executa a máquina com a palavra de entrada
-    return {"result": result}  # Retorna o resultado ("Sim" ou "Não")
-     
+@app.post("/maquina-turing/executar")
+def executar_maquina_turing_rota(dados: EntradaMaquinaDeTuring):
+    resultado = executar_maquina_turing(dados.maquina_turing, dados.palavra_entrada)
+    return {"resultado": resultado}
