@@ -1,8 +1,8 @@
 import { exportToJson, importFromJson, isCanvasEmpty } from './automato.js';
 import { createAutomaton, readAutomaton } from './context.js';
-import { minifyAutomaton, listAutomata, recognizeString, convertAfnToAfd } from './context.js';
+import { minifyAutomaton, recognizeString, convertAfnToAfd, checkEquivalence } from './context.js';
 import { listAndDisplayAutomata } from './pagination.js';
-import { saveAutomatonToLocalStorage, getAutomatonFromLocalStorage } from './storage.js';
+import { saveAutomatonToLocalStorage, getCurrentAutomatonId } from './storage.js';
 
 
 
@@ -18,14 +18,15 @@ const saveButton = document.getElementById('save');
 let automatonJson = null;
 let currentAutomatonId = null;
 
-disableButtons();
-// Listener para monitorar o desenho no canvas e gerar o JSON
+//disableButtons();
+
+//Listener para monitorar o desenho no canvas e gerar o JSON
 canvas.addEventListener('mouseup', () => {
     automatonJson = exportToJson(); 
     console.log(automatonJson)
-    if (automatonJson) {
-        enableButtons(); // Habilita os botões se o JSON for gerado
-    }
+    // if (currentAutomatonId || automatonJson) {
+    //     enableButtons(); 
+    // }
 });
 
 // Função para desabilitar os botões
@@ -49,19 +50,19 @@ function enableButtons() {
 async function handleButtonClick(operation) {
     errorElement.textContent = ''; // Limpa mensagens de erro anteriores
 
-    // if (!currentAutomatonId) {
-    //     alert('Nenhum autômato ativo. Salve um autômato primeiro.');
-    //     return;
-    // }
+    if (operation !== 'list' && !currentAutomatonId) {
+        alert('Nenhum automato selecionado!');
+        return;
+    }
 
     try {
         switch (operation) {
             case 'minify':
                 try {
                     const minifiedAutomaton = await minifyAutomaton(currentAutomatonId);
-                    console.log(minifiedAutomaton)
+                    console.log(minifiedAutomaton);
                     importFromJson(minifiedAutomaton);
-                    // saveAutomatonToLocalStorage(currentAutomatonId, minifiedAutomaton); // Atualizar no localStorage
+                    console.log(currentAutomatonId);
                 } catch (error) {
                     console.error('Erro ao minimizar o autômato:', error);
                     errorElement.textContent = error.message;
@@ -69,13 +70,8 @@ async function handleButtonClick(operation) {
                 break;
 
             case 'list':
-                try {
-                    const automataList = await listAutomata();
-                    listAndDisplayAutomata();
-
-                } catch (error) {
-                    errorElement.textContent = 'Erro ao listar autômatos: ' + error.message;
-                }
+                listAndDisplayAutomata();
+                setupAutomatonIdWatch();
                 break;
 
             case 'word':
@@ -83,11 +79,10 @@ async function handleButtonClick(operation) {
                     const inputString = prompt("Digite a cadeia a ser reconhecida:");
                     const recognitionResult = await recognizeString(currentAutomatonId, inputString);
                  
-                    if(recognitionResult.reconhecido){
+                    if (recognitionResult.reconhecido) {
                         errorElement.style.color = 'green';
                         errorElement.textContent = 'A cadeia foi reconhecida com sucesso!';
-                    }
-                    else {
+                    } else {
                         errorElement.style.color = 'red';
                         errorElement.textContent = 'A cadeia não foi aceita!';
                     }
@@ -103,9 +98,37 @@ async function handleButtonClick(operation) {
                     currentAutomatonId = convertedAutomatonId.detail.id_automato; 
                     const convertedAutomaton = await readAutomaton(currentAutomatonId);
                     importFromJson(convertedAutomaton);
-                    // saveAutomatonToLocalStorage(currentAutomatonId, convertedAutomaton); // Atualizar no localStorage
+                    saveAutomatonToLocalStorage(currentAutomatonId, convertedAutomaton); // Atualizar no localStorage
                 } catch (error) {
                     console.error('Erro ao converter AFN para AFD:', error);
+                }
+                break;
+
+            case 'equal':
+                try {
+                    const selectedAutomata = JSON.parse(localStorage.getItem('selectedAutomata'));
+                    
+                    if (!selectedAutomata || selectedAutomata.length < 2) {
+                        alert('Por favor, selecione dois autômatos para comparar.');
+                        return;
+                    }
+                    const automatonId1 = selectedAutomata[0];  
+                    const automatonId2 = selectedAutomata[1]; 
+
+                    const isEqual = await checkEquivalence(automatonId1, automatonId2);
+                    console.log(isEqual);
+
+                    if (isEqual) {
+                        errorElement.style.color = 'green';
+                        errorElement.textContent = 'Os autômatos são equivalentes.';
+                    } else {
+                        errorElement.style.color = 'red';
+                        errorElement.textContent = 'Os autômatos não são equivalentes.';
+                    }
+
+                } catch (error) {
+                    console.error('Erro ao verificar equivalência dos autômatos:', error);
+                    errorElement.textContent = 'Erro ao verificar equivalência dos autômatos: ' + error.message;
                 }
                 break;
 
@@ -137,4 +160,33 @@ minifyButton.addEventListener('click', () => handleButtonClick('minify'));
 listButton.addEventListener('click', () => handleButtonClick('list'));
 wordButton.addEventListener('click', () => handleButtonClick('word'));
 convertButton.addEventListener('click', () => handleButtonClick('convert'));
+equalButton.addEventListener('click', () => handleButtonClick('equal'));
 saveButton.addEventListener('click', () => saveAutomaton());
+
+function setupAutomatonIdWatch() { 
+    listButton.addEventListener('click', () => {
+        console.log('Antes de obter o ID:', localStorage.getItem('currentAutomatonId'));
+
+        // Obtenha o ID do localStorage
+        currentAutomatonId = getCurrentAutomatonId();
+
+        if (currentAutomatonId) {
+            console.log('ID do autômato atual após listButton:', currentAutomatonId);
+        } else {
+        console.error('Erro: currentAutomatonId é nulo ou indefinido.');
+    }
+    });
+    
+    document.getElementById('prev').addEventListener('click', () => {
+        currentAutomatonId = getCurrentAutomatonId();
+        console.log('ID do autômato atual após prev:', currentAutomatonId);
+    });
+
+    document.getElementById('next').addEventListener('click', () => {
+        currentAutomatonId = getCurrentAutomatonId();
+        console.log('ID do autômato atual após next:', currentAutomatonId);
+    });
+    
+    
+    
+}

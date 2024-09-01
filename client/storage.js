@@ -11,7 +11,18 @@ function getAutomatonFromLocalStorage(id) {
     return automatons[id] || null;
 }
 
+
+function setCurrentAutomatonId(id) {
+    localStorage.setItem('currentAutomatonId', id);
+}
+
+function getCurrentAutomatonId() {
+    return localStorage.getItem('currentAutomatonId');
+}
+
 export {
     saveAutomatonToLocalStorage,
-    getAutomatonFromLocalStorage
+    getAutomatonFromLocalStorage,
+    getCurrentAutomatonId,
+    setCurrentAutomatonId
 };

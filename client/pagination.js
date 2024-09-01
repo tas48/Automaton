@@ -1,50 +1,56 @@
 import { listAutomata } from './context.js';
 import { importFromJson, clearCanvas } from './automato.js';
+import { getCurrentAutomatonId, setCurrentAutomatonId } from './storage.js';
 
-let automata = [];  // Lista de autômatos
-let currentPage = 0;  // Página atual
+let automata = [];
+let currentPage = 0;
+let selectedAutomata = []; // Lista para armazenar IDs dos automatos marcados
 
-// Função para listar e exibir os autômatos
 export async function listAndDisplayAutomata() {
     const errorElement = document.getElementById('error');
-    errorElement.textContent = '';  // Limpa mensagens de erro anteriores
+    errorElement.textContent = '';
 
     try {
-        const automataObj = await listAutomata();  // Obter a lista de autômatos do backend
-        
-        // Converte o objeto em um array
+        const automataObj = await listAutomata();
         automata = Object.values(automataObj);
 
         if (automata.length > 0) {
-            showPagination();  // Mostrar a estrutura de paginação
-            displayAutomaton(currentPage);  // Exibir o primeiro autômato
+            showPagination();
+            displayAutomaton(currentPage);
         } else {
             errorElement.textContent = 'Nenhum autômato encontrado.';
+            return null;
         }
     } catch (error) {
         errorElement.textContent = 'Erro ao listar autômatos: ' + error.message;
+        return null;
     }
 }
 
-// Função para mostrar a estrutura de paginação
 function showPagination() {
-    document.getElementById('pagination').style.display = 'block';  // Revelar a estrutura de paginação
+    document.getElementById('pagination').style.display = 'block';
     updatePageInfo();
 }
 
-// Função para atualizar as informações da página
 function updatePageInfo() {
     const pageInfo = document.getElementById('pageInfo');
     pageInfo.textContent = `Página ${currentPage + 1} de ${automata.length}`;
 }
 
-// Função para exibir o autômato no canvas
 function displayAutomaton(pageIndex) {
     const automatonJson = automata[pageIndex];
-    importFromJson(automatonJson);  // Desenha o autômato no canvas
+    importFromJson(automatonJson);
+    const automatonId = pageIndex + 1;
+    setCurrentAutomatonId(automatonId);
+    updateCheckboxState(); // Atualiza o estado do checkbox
 }
 
-// Configuração dos botões de navegação
+function updateCheckboxState() {
+    const selectCheckbox = document.getElementById('select');
+    const currentId = getCurrentAutomatonId();
+    selectCheckbox.checked = selectedAutomata.includes(currentId);
+}
+
 document.getElementById('prev').addEventListener('click', () => {
     if (currentPage > 0) {
         currentPage--;
@@ -62,7 +68,25 @@ document.getElementById('next').addEventListener('click', () => {
 });
 
 document.getElementById('exitPagination').addEventListener('click', () => {
-    document.getElementById('pagination').style.display = 'none'; // Oculta a estrutura de paginação
-    clearCanvas(); // Limpa o canvas para remover o autômato desenhado
-    document.getElementById('error').textContent = ''; // Limpa mensagens de erro
+    document.getElementById('pagination').style.display = 'none';
+    clearCanvas();
+    document.getElementById('error').textContent = '';
+});
+
+// Captura o checkbox e adiciona o event listener
+document.getElementById('select').addEventListener('change', (event) => {
+    const currentId = getCurrentAutomatonId();
+
+    if (event.target.checked) {
+        if (selectedAutomata.length < 2) {
+            selectedAutomata.push(currentId);
+            localStorage.setItem('selectedAutomata', JSON.stringify(selectedAutomata));
+        } else {
+            alert('Você só pode selecionar até 2 autômatos.');
+            event.target.checked = false;
+        }
+    } else {
+        selectedAutomata = selectedAutomata.filter(id => id !== currentId);
+        localStorage.setItem('selectedAutomata', JSON.stringify(selectedAutomata));
+    }
 });

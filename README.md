@@ -15,11 +15,17 @@ Este projeto fornece uma API REST para gerenciar e converter autômatos (Autôma
     cd <repository-directory>
     ```
 
-2. **Rodando o projeto** (Obrigatório):
+2. **Rodando o projeto (Windows)** (Obrigatório):
     Nota: 
     ./run.bat
     ```
-    
+
+2. **Rodando o projeto (Unix)** (Obrigatório):
+    Nota: 
+    chmod +x run.sh
+    ./run.sh
+    ```
+
 2. **Acesse a API**:
 
     Abra seu navegador e navegue até `http://127.0.0.1:8000/docs` para ver a documentação interativa da API fornecida pelo FastAPI.

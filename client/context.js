@@ -3,15 +3,15 @@ const BASE_URL = 'http://localhost:8000';
 // Função para listar os autômatos
 async function listAutomata() {
     const response = await fetch(`${BASE_URL}/`);
-    console.log(response)
-    // if (!response.ok) {
-    //     throw new Error('Erro ao listar autômatos');
-    // }
+    if (!response.ok) {
+        throw new Error('Erro ao listar autômatos');
+    }
     return response.json();
 }
 
 // Função para criar um novo autômato
 async function createAutomaton(automaton) {
+    console.log(automaton)
     const response = await fetch(`${BASE_URL}/automato/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -80,7 +80,8 @@ async function getAutomatonType(automatonId) {
 
 // Função para verificar a equivalência entre dois autômatos
 async function checkEquivalence(automatonId1, automatonId2) {
-    const response = await fetch(`${BASE_URL}/automaton/${automatonId1}/equivalence/${automatonId2}`, {
+    console.log('im here');
+    const response = await fetch(`${BASE_URL}/automato/${automatonId1}/equivalencia/${automatonId2}`, {
         method: 'POST',
     });
     if (!response.ok) {
