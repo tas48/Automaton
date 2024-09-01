@@ -1,6 +1,6 @@
 from typing import List, Dict, Set, Tuple
 from fastapi import HTTPException
-from automato import Automato, Transicao, MaquinaDeTuring
+from automato import Transicao, Automato, MaquinaDeTuring, TransicaoMaquinaDeTuring, EntradaMaquinaDeTuring
 from itertools import chain, combinations
 from collections import deque
 
@@ -54,6 +54,12 @@ def eh_afd(automato: Automato) -> bool:
         if contagem > 1:
             return False
     return True
+
+    
+def converter_afn_para_afd(afn: Automato) -> Automato:
+    tabela_afd = montar_tabela(afn)
+    afd_sem_inalcancaveis = eliminar_estados(tabela_afd)
+    return afd_sem_inalcancaveis
 
 def montar_tabela(afn: Automato) -> Automato:
     novos_estados = []
@@ -118,11 +124,6 @@ def eliminar_estados(afd: Automato) -> Automato:
         estado_inicial=afd.estado_inicial,
         estados_de_aceitacao=aceitacao_filtrados
     )
-    
-def converter_afn_para_afd(afn: Automato) -> Automato:
-    tabela_afd = montar_tabela(afn)
-    afd_sem_inalcancaveis = eliminar_estados(tabela_afd)
-    return afd_sem_inalcancaveis
 
 def minimizar_automato(automato: Automato) -> Automato:
     completar_automato(automato)
@@ -283,21 +284,26 @@ def executar_maquina_turing(tm: MaquinaDeTuring, palavra_entrada: str) -> str:
         simbolo_sob_cabeca = tm.fita[tm.posicao_cabeca]
         transicao_encontrada = False
 
-        for transicao_maquina_de_turing in tm.transicoes:
-            if transicao_maquina_de_turing.estado_atual == estado_atual and transicao_maquina_de_turing.simbolo == simbolo_sob_cabeca:
-                tm.fita[tm.posicao_cabeca] = transicao_maquina_de_turing.simbolo_escrever
-                estado_atual = transicao_maquina_de_turing.proximo_estado
-                if transicao_maquina_de_turing.direcao_movimento == 'R':
+        for transicao in tm.transicoes:
+            if (transicao.estado_atual == estado_atual and
+                transicao.simbolo == simbolo_sob_cabeca):
+                
+                tm.fita[tm.posicao_cabeca] = transicao.escrever_simbolo
+                estado_atual = transicao.proximo_estado
+
+                if transicao.direcao_movimento == 'R':
                     tm.posicao_cabeca += 1
                     if tm.posicao_cabeca >= len(tm.fita):
                         tm.fita.append(tm.simbolo_branco)
-                elif transicao_maquina_de_turing.direcao_movimento == 'L':
+                elif transicao.direcao_movimento == 'L':
                     tm.posicao_cabeca -= 1
                     if tm.posicao_cabeca < 0:
                         tm.fita.insert(0, tm.simbolo_branco)
                         tm.posicao_cabeca = 0
+
                 transicao_encontrada = True
                 break
 
         if not transicao_encontrada:
             return "Não"
+

@@ -6,7 +6,6 @@ class Transicao(BaseModel):
     simbolo: str
     proximo_estado: str
 
-
 class Automato(BaseModel):
     estados: List[str]
     alfabeto: List[str]
@@ -26,12 +25,12 @@ class MaquinaDeTuring(BaseModel):
     fita: List[str] = []
     posicao_cabeca: int = 0
 
-class transicao_maquina_de_turing(BaseModel):
+class TransicaoMaquinaDeTuring(BaseModel):
     estado_atual: str
-    simbolo: str 
+    simbolo: str
     proximo_estado: str
-    escrever_simbolo: str  
-    direcao_movimento: str 
+    escrever_simbolo: str
+    direcao_movimento: str
     
 class EntradaMaquinaDeTuring(BaseModel):
     maquina_turing: MaquinaDeTuring

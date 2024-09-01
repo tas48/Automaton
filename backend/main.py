@@ -1,9 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List, Dict   
-from funcoes import criar_automato, ler_automato, reconhecer_cadeia, minimizar_automato, eh_afd, listar_automatos, converter_afn_para_afd, normalizar_automato, executar_maquina_turing
-from automato import Automato, Transicao, MaquinaDeTuring, EntradaMaquinaDeTuring
+from typing import List, Dict, Set, Tuple  
+from funcoes import criar_automato, ler_automato, reconhecer_cadeia, minimizar_automato, eh_afd, listar_automatos, converter_afn_para_afd, normalizar_automato, inicializar_fita, executar_maquina_turing
+from automato import Transicao, Automato, MaquinaDeTuring, TransicaoMaquinaDeTuring, EntradaMaquinaDeTuring
 from fastapi.middleware.cors import CORSMiddleware
+from itertools import chain, combinations
+
 
 app = FastAPI()
 
@@ -85,3 +87,4 @@ def equivalencia_rota(automato_id: int, segundo_automato_id: int) -> bool:
 def executar_maquina_turing_rota(dados: EntradaMaquinaDeTuring):
     resultado = executar_maquina_turing(dados.maquina_turing, dados.palavra_entrada)
     return {"resultado": resultado}
+
