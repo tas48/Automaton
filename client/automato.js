@@ -301,16 +301,19 @@ export function clearCanvas() {
 
 export function exportToJson() {
     const automaton = {
-        states: states.map(s => s.id),
-        alphabet: Array.from(new Set(transitions.map(t => t.symbol))),
-        transitions: transitions,
-        start_state: startState ? startState.id : null,
-        accept_states: finalStates
+        estados: states.map(s => s.id),
+        alfabeto: Array.from(new Set(transitions.map(t => t.symbol))),
+        transicoes: transitions.map(t => ({
+            estado_atual: t.current_state,
+            simbolo: t.symbol,
+            proximo_estado: t.next_state
+        })),
+        estado_inicial: startState ? startState.id : null,
+        estados_de_aceitacao: finalStates
     };
-    return JSON.stringify(automaton, null, 2);  // Retorna o JSON ao invés de definir o textContent
+
+    return JSON.stringify(automaton, null, 2);
 }
-
-
 
 export function importFromJson(json) {
     // Limpar os arrays existentes
@@ -323,7 +326,7 @@ export function importFromJson(json) {
     const automaton = typeof json === "string" ? JSON.parse(json) : json;
 
     // Restaurar estados
-    automaton.states.forEach((id, index) => {
+    automaton.estados.forEach((id, index) => {
         const state = {
             id: id,
             x: 150 + index * 150, // Ajuste das posições para espaçamento horizontal
@@ -334,9 +337,9 @@ export function importFromJson(json) {
     });
 
     // Restaurar transições
-    automaton.transitions.forEach((transition, index) => {
-        const fromState = states.find(s => s.id === transition.current_state);
-        const toState = states.find(s => s.id === transition.next_state);
+    automaton.transicoes.forEach((transition, index) => {
+        const fromState = states.find(s => s.id === transition.estado_atual);
+        const toState = states.find(s => s.id === transition.proximo_estado);
 
         if (fromState && toState) {
             // Calcular ponto de controle para espaçar as linhas de transição
@@ -346,9 +349,9 @@ export function importFromJson(json) {
             };
 
             const newTransition = {
-                current_state: transition.current_state,
-                symbol: transition.symbol,
-                next_state: transition.next_state,
+                current_state: transition.estado_atual,
+                symbol: transition.simbolo,
+                next_state: transition.proximo_estado,
                 controlPoint: controlPoint
             };
             transitions.push(newTransition);
@@ -356,12 +359,12 @@ export function importFromJson(json) {
     });
 
     // Restaurar estado inicial
-    if (automaton.start_state) {
-        startState = states.find(s => s.id === automaton.start_state);
+    if (automaton.estado_inicial) {
+        startState = states.find(s => s.id === automaton.estado_inicial);
     }
 
     // Restaurar estados finais
-    automaton.accept_states.forEach(finalStateId => {
+    automaton.estados_de_aceitacao.forEach(finalStateId => {
         const finalState = states.find(s => s.id === finalStateId);
         if (finalState) {
             finalStates.push(finalState.id);
@@ -371,5 +374,3 @@ export function importFromJson(json) {
     // Desenhar o autômato restaurado
     draw();
 }
-
-

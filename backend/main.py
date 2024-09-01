@@ -28,22 +28,39 @@ def listar_automatos_rota():
     
 @app.post("/automato/", response_model=int)
 def criar_automato_rota(automato: Automato):
-    return criar_automato(automato)
+    if(automato):
+        return criar_automato(automato)
+    else:
+        raise HTTPException(status_code=400, detail="Conteúdo nulo")
 
 @app.get("/automato/{automato_id}", response_model=Automato)
 def ler_automato_rota(automato_id: int):
-    return ler_automato(automato_id)
+    if(automato_id):
+        return ler_automato(automato_id)
+    else:
+        raise HTTPException(status_code=400, detail="Id nulo")
 
 @app.post("/automato/{automato_id}/reconhecer")
 def reconhecer_cadeia_rota(automato_id: int, cadeia: str):
-    automato = ler_automato(automato_id)
-    return {"reconhecido": reconhecer_cadeia(automato, cadeia)}
+    print(automato_id, cadeia)
+    if(automato_id):
+        print('to aqui')
+        automato = ler_automato(automato_id)
+        print(automato)
+        return {"reconhecido": reconhecer_cadeia(automato, cadeia)}
+    else:
+        raise HTTPException(status_code=400, detail="Id nulo")
+    
 
 @app.post("/automato/{automato_id}/converter-afn-para-afd", response_model=int)
 def converter_afn_para_afd_rota(automato_id: int):
-    afn = ler_automato(automato_id)
-    afd_convertido = converter_afn_para_afd(afn)
-    return criar_automato(afd_convertido) 
+    if(automato_id):
+        afn = ler_automato(automato_id)
+        afd_convertido = converter_afn_para_afd(afn)
+        return criar_automato(afd_convertido)
+    else:
+        raise HTTPException(status_code=400, detail="Id nulo")
+         
 
 @app.get("/automato/{automato_id}/minimizar")
 def minimizar_rota(automato_id: int):
@@ -53,15 +70,18 @@ def minimizar_rota(automato_id: int):
         afd_minimizado = minimizar_automato(afd)
         return afd_minimizado
     else:
-        raise HTTPException(status_code=400, detail="Erro: O autômato não é um AFD. É um AFN.")
+        raise HTTPException(status_code=400, detail="O autômato não é um AFD. É um AFN.")
 
 @app.get("/automato/{automato_id}/tipo")
 def obter_tipo_automato(automato_id: int):
-    automato = ler_automato(automato_id)
-    if eh_afd(automato):
-        return {"tipo": "AFD"}
+    if(automato_id):
+        automato = ler_automato(automato_id)
+        if eh_afd(automato):
+            return {"tipo": "AFD"}
+        else:
+            return {"tipo": "AFN"}
     else:
-        return {"tipo": "AFN"}
+        raise HTTPException(status_code=400, detail="Id nulo")
 
 @app.post("/automato/{automato_id}/equivalencia/{segundo_automato_id}")
 def equivalencia_rota(automato_id: int, segundo_automato_id: int) -> bool:

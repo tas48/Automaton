@@ -3,15 +3,16 @@ const BASE_URL = 'http://localhost:8000';
 // Função para listar os autômatos
 async function listAutomata() {
     const response = await fetch(`${BASE_URL}/`);
-    if (!response.ok) {
-        throw new Error('Erro ao listar autômatos');
-    }
+    console.log(response)
+    // if (!response.ok) {
+    //     throw new Error('Erro ao listar autômatos');
+    // }
     return response.json();
 }
 
 // Função para criar um novo autômato
 async function createAutomaton(automaton) {
-    const response = await fetch(`${BASE_URL}/automaton/`, {
+    const response = await fetch(`${BASE_URL}/automato/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(automaton),
@@ -24,7 +25,8 @@ async function createAutomaton(automaton) {
 
 // Função para obter um autômato pelo ID
 async function readAutomaton(automatonId) {
-    const response = await fetch(`${BASE_URL}/automaton/${automatonId}`);
+    console.log(automatonId)
+    const response = await fetch(`${BASE_URL}/automato/${automatonId}`);
     if (!response.ok) {
         throw new Error('Erro ao ler autômato');
     }
@@ -32,7 +34,8 @@ async function readAutomaton(automatonId) {
 }
 // Função para reconhecer uma string usando um autômato
 async function recognizeString(automatonId, inputString) {
-    const response = await fetch(`${BASE_URL}/automaton/${automatonId}/recognize?input_string=${encodeURIComponent(inputString)}`, {
+    console.log(automatonId,  inputString)
+    const response = await fetch(`${BASE_URL}/automato/${automatonId}/reconhecer?cadeia=${encodeURIComponent(inputString)}`, {
         method: 'POST',
     });
     if (!response.ok) {
@@ -43,9 +46,9 @@ async function recognizeString(automatonId, inputString) {
 
 // Função para converter um AFN para AFD
 async function convertAfnToAfd(automatonId) {
-    console.log(automatonId);  // Confirmação de que o ID está sendo passado corretamente
-    const response = await fetch(`${BASE_URL}/automaton/${automatonId}/convert-afn-to-afd`, {
-        method: 'POST',  // Alterado para POST
+    console.log(automatonId); 
+    const response = await fetch(`${BASE_URL}/automato/${automatonId}/converter-afn-para-afd`, {
+        method: 'POST', 
     });
     if (!response.ok) {
         throw new Error('Erro ao converter AFN para AFD');
@@ -56,16 +59,19 @@ async function convertAfnToAfd(automatonId) {
 
 // Função para minimizar um AFD
 async function minifyAutomaton(automatonId) {
-    const response = await fetch(`${BASE_URL}/automaton/${automatonId}/minify`);
+    const response = await fetch(`${BASE_URL}/automato/${automatonId}/minimizar`);
     if (!response.ok) {
-        throw new Error('Erro ao minimizar autômato');
+        const errorDetails = await response.json();
+        console.log(errorDetails.detail)
+        throw new Error(`Erro ao minimizar autômato: ${errorDetails.detail}`);
     }
+
     return response.json();
 }
 
 // Função para verificar o tipo do autômato (AFD ou AFN)
 async function getAutomatonType(automatonId) {
-    const response = await fetch(`${BASE_URL}/automaton/${automatonId}/type`);
+    const response = await fetch(`${BASE_URL}/automato/${automatonId}/tipo`);
     if (!response.ok) {
         throw new Error('Erro ao obter tipo do autômato');
     }

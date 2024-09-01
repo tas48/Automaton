@@ -59,8 +59,9 @@ async function handleButtonClick(operation) {
             case 'minify':
                 try {
                     const minifiedAutomaton = await minifyAutomaton(currentAutomatonId);
+                    console.log(minifiedAutomaton)
                     importFromJson(minifiedAutomaton);
-                    saveAutomatonToLocalStorage(currentAutomatonId, minifiedAutomaton); // Atualizar no localStorage
+                    // saveAutomatonToLocalStorage(currentAutomatonId, minifiedAutomaton); // Atualizar no localStorage
                 } catch (error) {
                     console.error('Erro ao minimizar o autômato:', error);
                     errorElement.textContent = error.message;
@@ -82,7 +83,7 @@ async function handleButtonClick(operation) {
                     const inputString = prompt("Digite a cadeia a ser reconhecida:");
                     const recognitionResult = await recognizeString(currentAutomatonId, inputString);
                  
-                    if(recognitionResult.recognized){
+                    if(recognitionResult.reconhecido){
                         errorElement.style.color = 'green';
                         errorElement.textContent = 'A cadeia foi reconhecida com sucesso!';
                     }
@@ -99,11 +100,10 @@ async function handleButtonClick(operation) {
             case 'convert':
                 try {
                     const convertedAutomatonId = await convertAfnToAfd(currentAutomatonId);
-                    
-                    currentAutomatonId = convertedAutomatonId; // Atualizar o ID do autômato ativo
-                    const convertedAutomaton = await readAutomaton(convertedAutomatonId);
+                    currentAutomatonId = convertedAutomatonId.detail.id_automato; 
+                    const convertedAutomaton = await readAutomaton(currentAutomatonId);
                     importFromJson(convertedAutomaton);
-                    saveAutomatonToLocalStorage(currentAutomatonId, convertedAutomaton); // Atualizar no localStorage
+                    // saveAutomatonToLocalStorage(currentAutomatonId, convertedAutomaton); // Atualizar no localStorage
                 } catch (error) {
                     console.error('Erro ao converter AFN para AFD:', error);
                 }
@@ -121,7 +121,8 @@ async function handleButtonClick(operation) {
 async function saveAutomaton() {
     try {
         const response = await createAutomaton(JSON.parse(automatonJson));
-        currentAutomatonId = response.detail.automaton_id; // Definir como autômato ativo
+        currentAutomatonId = response.detail.id_automato; // Definir como autômato ativo
+        console.log(currentAutomatonId)
         const automatonFromBackend = await readAutomaton(currentAutomatonId);
         saveAutomatonToLocalStorage(currentAutomatonId, automatonFromBackend);
         alert(`Autômato salvo com sucesso! ID: ${currentAutomatonId}`);
