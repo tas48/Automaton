@@ -1,6 +1,6 @@
 from typing import List, Dict, Set, Tuple
 from fastapi import HTTPException
-from automato import Transicao, Automato, MaquinaDeTuring, TransicaoMaquinaDeTuring, EntradaMaquinaDeTuring
+from automato import Transicao, Automato, MaquinaDeTuring, TransicaoMaquinaDeTuring
 from itertools import chain, combinations
 from collections import deque
 
@@ -267,43 +267,40 @@ def normalizar_automato(automato: Automato) -> Automato:
     
     return automato_normalizado
 
-def inicializar_fita(tm: MaquinaDeTuring, palavra_entrada: str):
-    tm.fita = list(palavra_entrada) + [tm.simbolo_branco]
-    tm.posicao_cabeca = 0
+def inicializar_fita(maquina: MaquinaDeTuring, palavra_entrada: str):
+    maquina.fita = list(palavra_entrada) + [maquina.simbolo_branco]
+    maquina.posicao_cabeca = 0
 
-def executar_maquina_turing(tm: MaquinaDeTuring, palavra_entrada: str) -> str:
-    inicializar_fita(tm, palavra_entrada)
-    estado_atual = tm.estado_inicial
+def executar_maquina_turing(maquina: MaquinaDeTuring, palavra_entrada: str) -> str:
+    inicializar_fita(maquina, palavra_entrada)
+    estado_atual = maquina.estado_inicial
 
     while True:
-        if estado_atual == tm.estado_aceitacao:
+        if estado_atual == maquina.estado_aceitacao:
             return "Sim"
-        if estado_atual == tm.estado_rejeicao:
+        if estado_atual == maquina.estado_rejeicao:
             return "Não"
 
-        simbolo_sob_cabeca = tm.fita[tm.posicao_cabeca]
+        simbolo_sob_cabeca = maquina.fita[maquina.posicao_cabeca]
         transicao_encontrada = False
 
-        for transicao in tm.transicoes:
-            if (transicao.estado_atual == estado_atual and
-                transicao.simbolo == simbolo_sob_cabeca):
-                
-                tm.fita[tm.posicao_cabeca] = transicao.escrever_simbolo
-                estado_atual = transicao.proximo_estado
+        for trans in maquina.transicoes:
+            if (trans.estado_atual == estado_atual and trans.simbolo == simbolo_sob_cabeca):
+                maquina.fita[maquina.posicao_cabeca] = trans.escrever_simbolo
+                estado_atual = trans.proximo_estado
 
-                if transicao.direcao_movimento == 'R':
-                    tm.posicao_cabeca += 1
-                    if tm.posicao_cabeca >= len(tm.fita):
-                        tm.fita.append(tm.simbolo_branco)
-                elif transicao.direcao_movimento == 'L':
-                    tm.posicao_cabeca -= 1
-                    if tm.posicao_cabeca < 0:
-                        tm.fita.insert(0, tm.simbolo_branco)
-                        tm.posicao_cabeca = 0
+                if trans.direcao_movimento == 'D':
+                    maquina.posicao_cabeca += 1
+                    if maquina.posicao_cabeca >= len(maquina.fita):
+                        maquina.fita.append(maquina.simbolo_branco)
+                elif trans.direcao_movimento == 'E':
+                    maquina.posicao_cabeca -= 1
+                    if maquina.posicao_cabeca < 0:
+                        maquina.fita.insert(0, maquina.simbolo_branco)
+                        maquina.posicao_cabeca = 0
 
                 transicao_encontrada = True
                 break
 
         if not transicao_encontrada:
             return "Não"
-
