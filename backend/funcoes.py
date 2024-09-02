@@ -267,40 +267,35 @@ def normalizar_automato(automato: Automato) -> Automato:
     
     return automato_normalizado
 
-def inicializar_fita(maquina: MaquinaDeTuring, palavra_entrada: str):
-    maquina.fita = list(palavra_entrada) + [maquina.simbolo_branco]
-    maquina.posicao_cabeca = 0
-
-def executar_maquina_turing(maquina: MaquinaDeTuring, palavra_entrada: str) -> str:
-    inicializar_fita(maquina, palavra_entrada)
+def executar_maquina_turing(maquina: MaquinaDeTuring, palavra: str) -> str:
+    fita = list(palavra) + [maquina.simbolo_branco]
+    maquina.fita = fita
+    
     estado_atual = maquina.estado_inicial
+    posicao_cabeca = maquina.posicao_cabeca
 
-    while True:
-        if estado_atual == maquina.estado_aceitacao:
-            return "Sim"
-        if estado_atual == maquina.estado_rejeicao:
-            return "Não"
-
-        simbolo_sob_cabeca = maquina.fita[maquina.posicao_cabeca]
+    while estado_atual not in maquina.estado_aceitacao and estado_atual not in maquina.estado_rejeicao:
+        simbolo_atual = maquina.fita[posicao_cabeca]
+        
         transicao_encontrada = False
-
-        for trans in maquina.transicoes:
-            if (trans.estado_atual == estado_atual and trans.simbolo == simbolo_sob_cabeca):
-                maquina.fita[maquina.posicao_cabeca] = trans.escrever_simbolo
-                estado_atual = trans.proximo_estado
-
-                if trans.direcao_movimento == 'D':
-                    maquina.posicao_cabeca += 1
-                    if maquina.posicao_cabeca >= len(maquina.fita):
-                        maquina.fita.append(maquina.simbolo_branco)
-                elif trans.direcao_movimento == 'E':
-                    maquina.posicao_cabeca -= 1
-                    if maquina.posicao_cabeca < 0:
-                        maquina.fita.insert(0, maquina.simbolo_branco)
-                        maquina.posicao_cabeca = 0
-
+        for transicao in maquina.transicoes:
+            if transicao.estado_atual == estado_atual and transicao.simbolo == simbolo_atual:
+                maquina.fita[posicao_cabeca] = transicao.escrever_simbolo
+                if transicao.direcao_movimento == "D":
+                    posicao_cabeca += 1
+                elif transicao.direcao_movimento == "E":
+                    posicao_cabeca -= 1
+                estado_atual = transicao.proximo_estado
                 transicao_encontrada = True
                 break
 
         if not transicao_encontrada:
-            return "Não"
+            return "Rejeitado"
+
+        if posicao_cabeca < 0 or posicao_cabeca >= len(maquina.fita):
+            return "Erro: Cabeça de leitura fora dos limites da fita."
+
+    if estado_atual in maquina.estado_aceitacao:
+        return "Aceito"
+    else:
+        return "Rejeitado"

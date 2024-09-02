@@ -27,8 +27,8 @@ class MaquinaDeTuring(BaseModel):
     simbolo_branco: str
     transicoes: List[TransicaoMaquinaDeTuring]
     estado_inicial: str
-    estado_aceitacao: str
-    estado_rejeicao: str
+    estado_aceitacao: List[str]
+    estado_rejeicao: List[str]
     fita: List[str] = []
     posicao_cabeca: int = 0
 

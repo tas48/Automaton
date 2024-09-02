@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from typing import List, Dict, Set, Tuple  
-from funcoes import criar_automato, ler_automato, reconhecer_cadeia, minimizar_automato, eh_afd, listar_automatos, converter_afn_para_afd, normalizar_automato, inicializar_fita, executar_maquina_turing
+from funcoes import criar_automato, ler_automato, reconhecer_cadeia, minimizar_automato, eh_afd, listar_automatos, converter_afn_para_afd, normalizar_automato, executar_maquina_turing
 from automato import Transicao, Automato, MaquinaDeTuring, TransicaoMaquinaDeTuring
 from fastapi.middleware.cors import CORSMiddleware
 from itertools import chain, combinations
