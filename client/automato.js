@@ -16,7 +16,7 @@ canvas.addEventListener('mouseup', endDragging);
 canvas.addEventListener('contextmenu', deleteStateOrTransition);
 document.addEventListener('keydown', handleKeyDown);
 document.addEventListener('keyup', handleKeyUp);
-canvas.addEventListener('mousedown', deleteStateOrTransition); // Escuta o clique do mouse
+canvas.addEventListener('mousedown', deleteStateOrTransition); 
 
 function createState(event) {
     const x = event.offsetX;
@@ -132,7 +132,7 @@ function drawState(state) {
         ctx.arc(state.x, state.y, state.radius - 6, 0, Math.PI * 2);
         ctx.stroke();
     }
-    ctx.font = "20px Arial";  // Aumentar o tamanho da fonte
+    ctx.font = "20px Arial"; 
     ctx.fillText(state.id, state.x - 15, state.y + 7);
 }
 
@@ -151,7 +151,7 @@ function drawArrow(from, to, text) {
         // Filtrar todas as transições cíclicas para este estado
         const cyclicTransitions = transitions.filter(t => t.current_state === from.id && t.next_state === to.id);
         
-        // Concatenar os símbolos das transições cíclicas, separados por vírgula
+        // Concatena as transições cíclicas, separados por vírgula
         const combinedText = cyclicTransitions.map(t => t.symbol).join(", ");
 
         // Desenhar um arco semicircular para a auto-transição
@@ -204,19 +204,19 @@ function drawArrow(from, to, text) {
 function handleKeyDown(event) {
     if (event.code === 'Space') {
         isDeleting = true;
-        canvas.style.cursor = 'crosshair'; // Muda o cursor para um "X"
+        canvas.style.cursor = 'crosshair';
     }
 }
 
 function handleKeyUp(event) {
     if (event.code === 'Space') {
         isDeleting = false;
-        canvas.style.cursor = 'default'; // Retorna o cursor ao padrão
+        canvas.style.cursor = 'default'; 
     }
 }
 
 function deleteStateOrTransition(event) {
-    if (isDeleting && event.button === 0) { // Verifica se o modo de deleção está ativo e o botão esquerdo foi pressionado
+    if (isDeleting && event.button === 0) {
         event.preventDefault();
 
         const x = event.offsetX;
@@ -274,11 +274,11 @@ export function isCanvasEmpty() {
     // Verificar se todos os pixels são transparentes
     for (let i = 0; i < pixelData.length; i += 4) {
         if (pixelData[i + 3] !== 0) { // Se o valor de alpha (transparência) não for 0
-            return false; // O canvas não está vazio
+            return false;
         }
     }
 
-    return true; // O canvas está vazio
+    return true;
 }
 
 
@@ -286,7 +286,6 @@ export function isCanvasEmpty() {
 export function clearCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Limpar as variáveis do autômato
     states = [];
     transitions = [];
     startState = null;
@@ -316,16 +315,13 @@ export function exportToJson() {
 }
 
 export function importFromJson(json) {
-    // Limpar os arrays existentes
     states = [];
     transitions = [];
     startState = null;
     finalStates = [];
 
-    // Parse o JSON se for uma string
     const automaton = typeof json === "string" ? JSON.parse(json) : json;
 
-    // Restaurar estados
     automaton.estados.forEach((id, index) => {
         const state = {
             id: id,
@@ -371,6 +367,5 @@ export function importFromJson(json) {
         }
     });
 
-    // Desenhar o autômato restaurado
     draw();
 }

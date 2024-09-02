@@ -4,7 +4,7 @@ import { getCurrentAutomatonId, setCurrentAutomatonId } from './storage.js';
 
 let automata = [];
 let currentPage = 0;
-let selectedAutomata = []; // Lista para armazenar IDs dos automatos marcados
+let selectedAutomata = [];
 
 export async function listAndDisplayAutomata() {
     const errorElement = document.getElementById('error');
@@ -42,7 +42,7 @@ function displayAutomaton(pageIndex) {
     importFromJson(automatonJson);
     const automatonId = pageIndex + 1;
     setCurrentAutomatonId(automatonId);
-    updateCheckboxState(); // Atualiza o estado do checkbox
+    updateCheckboxState(); 
 }
 
 function updateCheckboxState() {
@@ -73,8 +73,8 @@ document.getElementById('exitPagination').addEventListener('click', () => {
     document.getElementById('error').textContent = '';
 });
 
-// Captura o checkbox e adiciona o event listener
-document.getElementById('select').addEventListener('change', (event) => {
+
+document.getElementById('select').addEventListener('change', (event) => { // Captura o checkbox e adiciona o event listener
     const currentId = getCurrentAutomatonId();
 
     if (event.target.checked) {

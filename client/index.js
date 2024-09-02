@@ -18,18 +18,14 @@ const saveButton = document.getElementById('save');
 let automatonJson = null;
 let currentAutomatonId = null;
 
-//disableButtons();
 
 //Listener para monitorar o desenho no canvas e gerar o JSON
 canvas.addEventListener('mouseup', () => {
     automatonJson = exportToJson(); 
-    console.log(automatonJson)
-    // if (currentAutomatonId || automatonJson) {
-    //     enableButtons(); 
-    // }
+    //console.log(automatonJson)
 });
 
-// Função para desabilitar os botões
+
 function disableButtons() {
     minifyButton.disabled = true;
     wordButton.disabled = true;
@@ -37,7 +33,6 @@ function disableButtons() {
     equalButton.disabled = true;
 }
 
-// Função para habilitar os botões
 function enableButtons() {
     minifyButton.disabled = false;
     wordButton.disabled = false;
@@ -48,7 +43,7 @@ function enableButtons() {
 
 
 async function handleButtonClick(operation) {
-    errorElement.textContent = ''; // Limpa mensagens de erro anteriores
+    errorElement.textContent = '';
 
     if (operation !== 'list' && !currentAutomatonId) {
         alert('Nenhum automato selecionado!');
@@ -60,9 +55,7 @@ async function handleButtonClick(operation) {
             case 'minify':
                 try {
                     const minifiedAutomaton = await minifyAutomaton(currentAutomatonId);
-                    console.log(minifiedAutomaton);
                     importFromJson(minifiedAutomaton);
-                    console.log(currentAutomatonId);
                 } catch (error) {
                     console.error('Erro ao minimizar o autômato:', error);
                     errorElement.textContent = error.message;
@@ -98,7 +91,7 @@ async function handleButtonClick(operation) {
                     currentAutomatonId = convertedAutomatonId.detail.id_automato; 
                     const convertedAutomaton = await readAutomaton(currentAutomatonId);
                     importFromJson(convertedAutomaton);
-                    saveAutomatonToLocalStorage(currentAutomatonId, convertedAutomaton); // Atualizar no localStorage
+                    saveAutomatonToLocalStorage(currentAutomatonId, convertedAutomaton);
                 } catch (error) {
                     console.error('Erro ao converter AFN para AFD:', error);
                 }
@@ -116,7 +109,6 @@ async function handleButtonClick(operation) {
                     const automatonId2 = selectedAutomata[1]; 
 
                     const isEqual = await checkEquivalence(automatonId1, automatonId2);
-                    console.log(isEqual);
 
                     if (isEqual) {
                         errorElement.style.color = 'green';
@@ -144,8 +136,7 @@ async function handleButtonClick(operation) {
 async function saveAutomaton() {
     try {
         const response = await createAutomaton(JSON.parse(automatonJson));
-        currentAutomatonId = response.detail.id_automato; // Definir como autômato ativo
-        console.log(currentAutomatonId)
+        currentAutomatonId = response.detail.id_automato;
         const automatonFromBackend = await readAutomaton(currentAutomatonId);
         saveAutomatonToLocalStorage(currentAutomatonId, automatonFromBackend);
         alert(`Autômato salvo com sucesso! ID: ${currentAutomatonId}`);
@@ -155,7 +146,7 @@ async function saveAutomaton() {
 }
 
 
-// Adiciona os listeners para os botões
+
 minifyButton.addEventListener('click', () => handleButtonClick('minify'));
 listButton.addEventListener('click', () => handleButtonClick('list'));
 wordButton.addEventListener('click', () => handleButtonClick('word'));
@@ -165,9 +156,7 @@ saveButton.addEventListener('click', () => saveAutomaton());
 
 function setupAutomatonIdWatch() { 
     listButton.addEventListener('click', () => {
-        console.log('Antes de obter o ID:', localStorage.getItem('currentAutomatonId'));
 
-        // Obtenha o ID do localStorage
         currentAutomatonId = getCurrentAutomatonId();
 
         if (currentAutomatonId) {
@@ -179,12 +168,10 @@ function setupAutomatonIdWatch() {
     
     document.getElementById('prev').addEventListener('click', () => {
         currentAutomatonId = getCurrentAutomatonId();
-        console.log('ID do autômato atual após prev:', currentAutomatonId);
     });
 
     document.getElementById('next').addEventListener('click', () => {
         currentAutomatonId = getCurrentAutomatonId();
-        console.log('ID do autômato atual após next:', currentAutomatonId);
     });
     
     

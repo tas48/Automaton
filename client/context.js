@@ -1,6 +1,5 @@
 const BASE_URL = 'http://localhost:8000';
 
-// Função para listar os autômatos
 async function listAutomata() {
     const response = await fetch(`${BASE_URL}/`);
     if (!response.ok) {
@@ -9,9 +8,7 @@ async function listAutomata() {
     return response.json();
 }
 
-// Função para criar um novo autômato
 async function createAutomaton(automaton) {
-    console.log(automaton)
     const response = await fetch(`${BASE_URL}/automato/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -23,18 +20,16 @@ async function createAutomaton(automaton) {
     return response.json();
 }
 
-// Função para obter um autômato pelo ID
+
 async function readAutomaton(automatonId) {
-    console.log(automatonId)
     const response = await fetch(`${BASE_URL}/automato/${automatonId}`);
     if (!response.ok) {
         throw new Error('Erro ao ler autômato');
     }
     return response.json();
 }
-// Função para reconhecer uma string usando um autômato
+
 async function recognizeString(automatonId, inputString) {
-    console.log(automatonId,  inputString)
     const response = await fetch(`${BASE_URL}/automato/${automatonId}/reconhecer?cadeia=${encodeURIComponent(inputString)}`, {
         method: 'POST',
     });
@@ -44,9 +39,8 @@ async function recognizeString(automatonId, inputString) {
     return response.json();
 }
 
-// Função para converter um AFN para AFD
+
 async function convertAfnToAfd(automatonId) {
-    console.log(automatonId); 
     const response = await fetch(`${BASE_URL}/automato/${automatonId}/converter-afn-para-afd`, {
         method: 'POST', 
     });
@@ -57,7 +51,7 @@ async function convertAfnToAfd(automatonId) {
 }
 
 
-// Função para minimizar um AFD
+
 async function minifyAutomaton(automatonId) {
     const response = await fetch(`${BASE_URL}/automato/${automatonId}/minimizar`);
     if (!response.ok) {
@@ -69,7 +63,7 @@ async function minifyAutomaton(automatonId) {
     return response.json();
 }
 
-// Função para verificar o tipo do autômato (AFD ou AFN)
+
 async function getAutomatonType(automatonId) {
     const response = await fetch(`${BASE_URL}/automato/${automatonId}/tipo`);
     if (!response.ok) {
@@ -78,9 +72,7 @@ async function getAutomatonType(automatonId) {
     return response.json();
 }
 
-// Função para verificar a equivalência entre dois autômatos
 async function checkEquivalence(automatonId1, automatonId2) {
-    console.log('im here');
     const response = await fetch(`${BASE_URL}/automato/${automatonId1}/equivalencia/${automatonId2}`, {
         method: 'POST',
     });
@@ -90,7 +82,6 @@ async function checkEquivalence(automatonId1, automatonId2) {
     return response.json();
 }
 
-// Exportar funções para uso em outros módulos
 export {
     listAutomata,
     createAutomaton,
