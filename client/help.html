@@ -3,81 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor de Autômatos</title>
+    <title>Tutorial do Editor de Autômatos</title>
     <style>
-        /* Estilo básico do menu sanfona */
-        .accordion {
-            background-color: #333;
-            color: white;
-            cursor: pointer;
-            padding: 18px;
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px 0;
+            text-align: center;
             width: 100%;
-            border: none;
-            text-align: left;
-            outline: none;
-            font-size: 15px;
-            transition: 0.4s;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .active, .accordion:hover {
-            background-color: #555;
+        header h1 {
+            font-size: 20px;
+            margin: 0;
+            color: #f4f4f4;
+            font-weight: normal;
         }
 
-        .accordion:after {
-            content: '\002B'; /* Plus symbol */
-            color: white;
-            font-weight: bold;
-            float: right;
-            margin-left: 5px;
+        .sidebar {
+            width: 220px;
+            background-color: #34495e;
+            padding: 15px;
+            position: fixed;
+            top: 50px;  /* Ajustado para coincidir com o novo tamanho do cabeçalho */
+            bottom: 0;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
         }
 
-        .active:after {
-            content: "\2212"; /* Minus symbol */
+        .sidebar a {
+            color: #ecf0f1;
+            padding: 12px;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
         }
 
-        .panel {
-            padding: 0 18px;
-            background-color: white;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.2s ease-out;
-            background-color: #f9f9f9;
+        .sidebar a:hover {
+            background-color: #1abc9c;
         }
 
-        .panel p {
-            color: black;
+        .container {
+            margin-left: 240px;
+            margin-top: 70px;
+            max-width: 960px;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1, h2 {
+            color: #2c3e50;
+        }
+
+        h2 {
+            font-size: 18px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 5px;
+        }
+
+        .tutorial-section {
+            margin-bottom: 40px;
+        }
+
+        .tutorial-section img {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button {
+            display: block;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .back-button a {
+            color: #fff;
+            background-color: #2c3e50;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button a:hover {
+            background-color: #1abc9c;
         }
     </style>
 </head>
 <body>
 
-<!-- Menu Sanfona (Accordion) -->
-<button class="accordion">Comandos do Editor de Autômatos</button>
-<div class="panel">
-    <p><strong>Botão direito (duplo clique):</strong> Cria um novo estado no autômato.</p>
-    <p><strong>Segurar e arrastar com o botão esquerdo:</strong> Cria uma transição entre dois estados ao arrastar de um estado para outro.</p>
-    <p><strong>Ctrl + botão direito:</strong> Torna o estado selecionado um estado final.</p>
-    <p><strong>Ctrl + botão esquerdo:</strong> Torna o estado selecionado um estado inicial.</p>
-    <p><strong>Botão esquerdo + Space:</strong> Apaga o estado selecionado.</p>
+<header>
+    <h1>Tutorial do Editor de Autômatos</h1>
+</header>
+
+<div class="sidebar">
+    <a href="#section1">1. Criar um Novo Estado</a>
+    <a href="#section2">2. Criar uma Transição</a>
+    <a href="#section3">3. Definir Estado Inicial</a>
+    <a href="#section4">4. Definir Estado Final</a>
+    <a href="#section5">5. Apagar um Estado</a>
 </div>
 
-<script>
-    // Script para o menu sanfona
-    const accordion = document.querySelectorAll(".accordion");
+<div class="container">
+    <div id="section1" class="tutorial-section">
+        <h2>Criar um Novo Estado</h2>
+        <p>Para criar um novo estado no seu autômato, você pode apenas precisa clicar duas vezes com o botão esquerdo do mouse em qualquer lugar do quadro, o qual chamaremos de canvas daqui para frente.</p>
+        <img src="assets/state.png" alt="Criar um Novo Estado">
+    </div>
 
-    accordion.forEach(button => {
-        button.addEventListener("click", function () {
-            this.classList.toggle("active");
+    <div id="section2" class="tutorial-section">
+        <h2>Criar uma Transição</h2>
+        <p>Para criar uma transição entre dois estados, segure e arraste com o botão direito do mouse de um estado para outro, após uma janela de contexto irá aparecer, basta digitar a letra correspondente a transição.</p>
+        <img src="assets/trans.png" alt="Criar uma Transição">
+    </div>
 
-            const panel = this.nextElementSibling;
-            if (panel.style.maxHeight) {
-                panel.style.maxHeight = null;
-            } else {
-                panel.style.maxHeight = panel.scrollHeight + "px";
-            }
-        });
-    });
-</script>
+    <div id="section3" class="tutorial-section">
+        <h2>Definir Estado Inicial</h2>
+        <p>Para definir um estado como inicial, segure a tecla Ctrl e clique com o botão esquerdo no estado desejado.</p>
+        <img src="assets/init.png" alt="Definir Estado Inicial">
+    </div>
+
+    <div id="section4" class="tutorial-section">
+        <h2>Definir Estado Final</h2>
+        <p>Para definir um estado como final, segure a tecla Ctrl e clique com o botão direito no estado desejado.</p>
+        <img src="assets/final.png" alt="Definir Estado Final">
+    </div>
+
+    <div id="section5" class="tutorial-section">
+        <h2>Apagar um Estado</h2>
+        <p>Para apagar um estado, clique nele com o botão esquerdo do mouse enquanto segura a tecla Space. O cursor irá mudar pra um símbolo de cruz.</p>
+        <img src="assets/erase.png" alt="Apagar um Estado">
+    </div>
+
+    <div class="back-button">
+        <a href="index.html">Voltar ao Editor</a>
+    </div>
+</div>
 
 </body>
 </html>
