@@ -1,8 +1,9 @@
 from typing import List, Dict, Set, Tuple
 from fastapi import HTTPException
-from automato import Transicao, Automato, MaquinaDeTuring, TransicaoMaquinaDeTuring
+from automato import Transicao, Automato, MaquinaDeTuring
 from itertools import chain, combinations
 from collections import deque
+
 
 automatos_db: Dict[int, Automato] = {}
 proximo_id = 1
@@ -267,35 +268,33 @@ def normalizar_automato(automato: Automato) -> Automato:
     
     return automato_normalizado
 
-def executar_maquina_turing(maquina: MaquinaDeTuring, palavra: str) -> str:
-    fita = list(palavra) + [maquina.simbolo_branco]
-    maquina.fita = fita
-    
-    estado_atual = maquina.estado_inicial
-    posicao_cabeca = maquina.posicao_cabeca
+def criar_maquina_de_turing(fita, estado_inicial, estados_finais, funcao_transicao):
+    return MaquinaDeTuring(
+        fita=fita,
+        estado_inicial=estado_inicial,
+        estados_finais=estados_finais,
+        funcao_transicao=funcao_transicao
+    )
 
-    while estado_atual not in maquina.estado_aceitacao and estado_atual not in maquina.estado_rejeicao:
-        simbolo_atual = maquina.fita[posicao_cabeca]
-        
-        transicao_encontrada = False
-        for transicao in maquina.transicoes:
-            if transicao.estado_atual == estado_atual and transicao.simbolo == simbolo_atual:
-                maquina.fita[posicao_cabeca] = transicao.escrever_simbolo
-                if transicao.direcao_movimento == "D":
-                    posicao_cabeca += 1
-                elif transicao.direcao_movimento == "E":
-                    posicao_cabeca -= 1
-                estado_atual = transicao.proximo_estado
-                transicao_encontrada = True
-                break
+def executar_maquina_de_turing(maquina):
+    while not maquina.final():
+        maquina.passo()
+    return maquina.obter_fita()
 
-        if not transicao_encontrada:
-            return "Rejeitado"
+def processar_maquina_turing(combinacao):
+    estado_inicial = "inicial"
+    estados_finais = {"final"}
+    funcao_transicao = {
+        ("inicial", "0"): ("inicial", "1", "D"),
+        ("inicial", "1"): ("inicial", "0", "D"),
+        ("inicial", " "): ("final", " ", "N"),
+    }
 
-        if posicao_cabeca < 0 or posicao_cabeca >= len(maquina.fita):
-            return "Erro: Cabeça de leitura fora dos limites da fita."
+    maquina = criar_maquina_de_turing(
+        fita=combinacao + " ",
+        estado_inicial=estado_inicial,
+        estados_finais=estados_finais,
+        funcao_transicao=funcao_transicao
+    )
 
-    if estado_atual in maquina.estado_aceitacao:
-        return "Aceito"
-    else:
-        return "Rejeitado"
+    return executar_maquina_de_turing(maquina)

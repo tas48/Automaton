@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from typing import List, Dict, Set, Tuple  
-from funcoes import criar_automato, ler_automato, reconhecer_cadeia, minimizar_automato, eh_afd, listar_automatos, converter_afn_para_afd, normalizar_automato, executar_maquina_turing
-from automato import Transicao, Automato, MaquinaDeTuring, TransicaoMaquinaDeTuring
+from funcoes import criar_automato, ler_automato, reconhecer_cadeia, minimizar_automato, eh_afd, listar_automatos, converter_afn_para_afd, normalizar_automato, processar_maquina_turing
+from automato import Transicao, Automato
 from fastapi.middleware.cors import CORSMiddleware
 from itertools import chain, combinations
 
@@ -102,8 +102,8 @@ def equivalencia_rota(automato_id: int, segundo_automato_id: int) -> bool:
         set(automato_normalizado1.estados_de_aceitacao) == set(automato_normalizado2.estados_de_aceitacao)
     )
     
-@app.post("/MaquinaDeTuring/executar/{palavra}")
-def executar_maquina_turing_rota(palavra: str, maquina_de_turing: MaquinaDeTuring):
-    resultado = executar_maquina_turing(maquina_de_turing, palavra)
-    return {"resultado": resultado}
+@app.post("/processar")
+async def processar_combinacao(combinacao: str):
+    resultado = processar_maquina_turing(combinacao)
+    return {"entrada": combinacao, "resultado": resultado}
 
